@@ -177,7 +177,7 @@ fi
 
 # Pull models in background
 echo "Pulling AI models (this may take a while)..."
-ollama pull gemma:7b &
+ollama pull llama3.2:3b &
 ollama pull llama3.2:3b &
 
 # ===========================================

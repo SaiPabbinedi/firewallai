@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Brain, Shield, TrendingUp, AlertTriangle, CheckCircle2, Info, Loader2, RefreshCw, Zap } from 'lucide-react';
+import { Brain, TrendingUp, AlertTriangle, CheckCircle2, Info, Loader2, RefreshCw, Zap } from 'lucide-react';
 
 // API configuration
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://192.168.1.101:3001';

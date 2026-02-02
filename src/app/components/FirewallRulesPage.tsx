@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Shield, Plus, Trash2, Edit2, Check, X, RefreshCw,
-  Loader2, AlertTriangle, Clock, ChevronRight, Copy
+  Plus, Trash2, Check, X, RefreshCw,
+  Loader2, AlertTriangle, Clock, Copy
 } from 'lucide-react';
+import { AIRuleGenerator } from './ui/AIRuleGenerator';
 
 // API configuration
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://192.168.1.101:3001';
@@ -57,8 +58,8 @@ export function FirewallRulesPage() {
         const activeRules: FirewallRule[] = auditData
           .filter((entry: AuditEntry) => entry.status === 'applied')
           .map((entry: AuditEntry, index: number) => ({
-            id: `rule-${index}`,
             ...entry.rule,
+            id: `rule-${index}`,
             status: 'active' as const,
             createdAt: entry.timestamp,
             source: 'ai' as const
@@ -226,6 +227,17 @@ export function FirewallRulesPage() {
         </div>
       )}
 
+      {/* AI Rule Generator */}
+      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div className="border-b border-border px-4 py-3 bg-muted/30">
+          <h3 className="font-medium">🤖 AI Rule Generator</h3>
+          <p className="text-xs text-muted-foreground mt-1">Use natural language to create firewall rules with AI assistance</p>
+        </div>
+        <div className="p-4">
+          <AIRuleGenerator />
+        </div>
+      </div>
+
       {/* Active Rules */}
       <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
         <div className="border-b border-border px-4 py-3 bg-muted/30">
@@ -307,8 +319,8 @@ export function FirewallRulesPage() {
           {auditLog.slice(0, 10).map((entry, index) => (
             <div key={index} className="px-4 py-3 flex items-center gap-4">
               <div className={`h-2 w-2 rounded-full ${entry.status === 'applied' ? 'bg-green-500' :
-                  entry.status === 'pending_approval' ? 'bg-yellow-500' :
-                    entry.status === 'failed' ? 'bg-red-500' : 'bg-gray-500'
+                entry.status === 'pending_approval' ? 'bg-yellow-500' :
+                  entry.status === 'failed' ? 'bg-red-500' : 'bg-gray-500'
                 }`} />
               <div className="flex-1">
                 <p className="text-sm">

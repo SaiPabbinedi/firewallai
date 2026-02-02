@@ -13,20 +13,14 @@ interface TerminalProps {
     onClose?: () => void;
 }
 
-export function Terminal({ id, type, onData, onClose }: TerminalProps) {
+export function Terminal({ id, type, onData }: TerminalProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const xtermRef = useRef<XTerm | null>(null);
     const fitAddonRef = useRef<FitAddon | null>(null);
     const resizeObserverRef = useRef<ResizeObserver | null>(null);
     const initializedRef = useRef(false);
 
-    const { createSession, getSession, sendInput, subscribeToOutput, closeSession } = useTerminalSession();
-
-    // Handle terminal close (exit command or X button)
-    const handleClose = useCallback(() => {
-        closeSession(id);
-        onClose?.();
-    }, [id, closeSession, onClose]);
+    const { createSession, getSession, sendInput, subscribeToOutput } = useTerminalSession();
 
     useEffect(() => {
         if (!containerRef.current) return;

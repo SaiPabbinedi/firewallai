@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  FileText, Search, Filter, Download, RefreshCw,
-  Loader2, AlertTriangle, Check, X, Clock, ChevronDown
+  Search, Filter, Download, RefreshCw,
+  Loader2, Check, X, Clock, ChevronDown
 } from 'lucide-react';
 
 // API configuration

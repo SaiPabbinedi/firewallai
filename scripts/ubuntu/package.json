@@ -1,0 +1,36 @@
+{
+    "name": "firewallai-backend",
+    "version": "2.1.0",
+    "description": "FirewallAI Backend Server - Adaptive Network Defense System",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "node server.js"
+    },
+    "keywords": [
+        "firewall",
+        "ai",
+        "security",
+        "pfsense",
+        "groq",
+        "ollama"
+    ],
+    "author": "FirewallAI Team",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^1.6.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "groq-sdk": "^0.3.0",
+        "node-pty": "^1.0.0",
+        "node-ssh": "^13.1.0",
+        "socket.io": "^4.7.2"
+    },
+    "optionalDependencies": {
+        "kafkajs": "^2.2.4"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

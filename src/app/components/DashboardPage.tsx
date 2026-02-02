@@ -19,13 +19,13 @@ interface BlockEvent {
 export function DashboardPage() {
   const [activeThreats, setActiveThreats] = useState(12);
   const [logsPerSecond, setLogsPerSecond] = useState(2847);
-  const [ruleCount, setRuleCount] = useState(342);
-  const [riskLevel, setRiskLevel] = useState('Medium');
+  const [ruleCount] = useState(342);
+  const [riskLevel] = useState('Medium');
   const [blockedDomains, setBlockedDomains] = useState<BlockedDomain[]>([]);
   const [blockEvents, setBlockEvents] = useState<BlockEvent[]>([]);
   const [isLoadingBlocklist, setIsLoadingBlocklist] = useState(true);
-  const [backendUrl, setBackendUrl] = useState('http://192.168.1.101:3001');
-  
+  const [backendUrl] = useState('http://192.168.1.101:3001');
+
   const [networkTrafficData, setNetworkTrafficData] = useState([
     { time: '00:00', packets: 4200 },
     { time: '04:00', packets: 2100 },
@@ -36,7 +36,7 @@ export function DashboardPage() {
     { time: '23:59', packets: 5100 },
   ]);
 
-  const [aiInsights, setAiInsights] = useState([
+  const [aiInsights] = useState([
     {
       severity: 'high',
       title: 'Possible brute-force attack detected',
@@ -66,15 +66,16 @@ export function DashboardPage() {
         const text = await response.text();
         const domains = text.split('\n').filter(d => d.trim() !== '');
         const now = new Date();
-        
+
         // Map domains to blocked domain objects
+        const reasons = ['Policy Violation', 'Malware', 'Phishing', 'Adult Content', 'Social Media'];
         const blockedList: BlockedDomain[] = domains.map((domain, index) => ({
           domain: domain.trim(),
           blockedAt: new Date(now.getTime() - Math.random() * 86400000 * 7).toLocaleString(),
-          reason: ['Policy Violation', 'Malware', 'Phishing', 'Adult Content', 'Social Media'][index % 5],
+          reason: reasons[index % 5]!,
           attempts: Math.floor(Math.random() * 500) + 10
         }));
-        
+
         setBlockedDomains(blockedList);
       }
     } catch (error) {
@@ -92,15 +93,15 @@ export function DashboardPage() {
 
   // Generate simulated block events
   const generateBlockEvent = (): BlockEvent => {
-    const domains = blockedDomains.length > 0 
+    const domains = blockedDomains.length > 0
       ? blockedDomains.map(d => d.domain)
       : ['facebook.com', 'instagram.com', 'example.com', 'bing.com'];
     const sourceIPs = ['192.168.1.45', '192.168.1.102', '192.168.1.78', '10.0.0.15', '172.16.0.23'];
-    
+
     return {
-      domain: domains[Math.floor(Math.random() * domains.length)],
+      domain: domains[Math.floor(Math.random() * domains.length)]!,
       timestamp: new Date().toLocaleTimeString(),
-      sourceIP: sourceIPs[Math.floor(Math.random() * sourceIPs.length)],
+      sourceIP: sourceIPs[Math.floor(Math.random() * sourceIPs.length)]!,
       action: 'BLOCKED'
     };
   };
@@ -128,7 +129,7 @@ export function DashboardPage() {
       setNetworkTrafficData(prev => {
         const newData = [...prev];
         newData.shift();
-        const lastValue = newData[newData.length - 1].packets;
+        const lastValue = newData[newData.length - 1]?.packets ?? 5000;
         const change = Math.floor(Math.random() * 2000) - 1000;
         newData.push({
           time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
@@ -270,12 +271,12 @@ export function DashboardPage() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={networkTrafficData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 217, 255, 0.1)" />
-                <XAxis 
-                  dataKey="time" 
+                <XAxis
+                  dataKey="time"
                   stroke="#71788a"
                   tick={{ fill: '#71788a', fontSize: 12 }}
                 />
-                <YAxis 
+                <YAxis
                   stroke="#71788a"
                   tick={{ fill: '#71788a', fontSize: 12 }}
                 />
@@ -329,9 +330,8 @@ export function DashboardPage() {
               return (
                 <div
                   key={index}
-                  className={`rounded-lg border p-4 transition-all hover:border-primary/50 ${
-                    severityColors[insight.severity as keyof typeof severityColors]
-                  }`}
+                  className={`rounded-lg border p-4 transition-all hover:border-primary/50 ${severityColors[insight.severity as keyof typeof severityColors]
+                    }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`mt-1 h-2 w-2 rounded-full ${severityDots[insight.severity as keyof typeof severityDots]}`} />
@@ -368,7 +368,7 @@ export function DashboardPage() {
                 <p className="text-xs text-muted-foreground">Domains from blocklist (ai.txt)</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={fetchBlocklist}
               className="p-2 rounded-lg border border-border hover:bg-muted transition-colors"
               title="Refresh blocklist"
@@ -376,7 +376,7 @@ export function DashboardPage() {
               <RefreshCw className={`h-4 w-4 ${isLoadingBlocklist ? 'animate-spin' : ''}`} />
             </button>
           </div>
-          
+
           {isLoadingBlocklist ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="h-6 w-6 animate-spin text-primary" />
@@ -384,7 +384,7 @@ export function DashboardPage() {
           ) : (
             <div className="space-y-2 max-h-[250px] overflow-y-auto">
               {blockedDomains.map((blocked, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-black/20 hover:bg-black/30 transition-colors"
                 >
@@ -422,7 +422,7 @@ export function DashboardPage() {
               <p className="text-xs text-muted-foreground">Live feed of blocked access attempts</p>
             </div>
           </div>
-          
+
           <div className="space-y-2 max-h-[250px] overflow-y-auto">
             {blockEvents.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground text-sm">
@@ -431,7 +431,7 @@ export function DashboardPage() {
               </div>
             ) : (
               blockEvents.map((event, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-center justify-between p-3 rounded-lg border border-destructive/20 bg-destructive/5 animate-in slide-in-from-top-2"
                 >

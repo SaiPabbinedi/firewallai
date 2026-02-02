@@ -92,7 +92,7 @@ export function SettingsPage() {
   const testBackendConnection = async () => {
     setBackendStatus('testing');
     try {
-      const response = await fetch(`http://${config.backendUrl}:${config.backendPort}/ai.txt`);
+      const response = await fetch(`http://${config.backendUrl}:${config.backendPort}/health`);
       if (response.ok) {
         setBackendStatus('connected');
         return true;
@@ -169,7 +169,7 @@ export function SettingsPage() {
     }));
 
     // Open pfSense in new tab
-    const newWindow = window.open(`https://${config.pfsenseUrl}:${config.pfsensePort}/`, '_blank', 'noopener');
+    window.open(`https://${config.pfsenseUrl}:${config.pfsensePort}/`, '_blank', 'noopener');
 
     // Show helper message
     setSaveMessage(`pfSense WebGUI opened! Username: ${config.pfsenseUsername}`);

@@ -48,7 +48,7 @@ import requests
 # ===========================================
 KAFKA_BOOTSTRAP = 'localhost:9092'
 OLLAMA_URL = 'http://localhost:11434'
-OLLAMA_MODEL = 'gemma:7b'  # or 'llama3.2:3b'
+OLLAMA_MODEL = 'llama3.2:3b'
 
 # Anomaly detection thresholds
 ANOMALY_THRESHOLD = -0.5  # Isolation Forest score threshold

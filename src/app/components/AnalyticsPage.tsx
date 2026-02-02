@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   BarChart3, Activity, Shield, Globe, Clock,
-  TrendingUp, TrendingDown, RefreshCw, Loader2,
+  TrendingUp, RefreshCw, Loader2,
   AlertTriangle, Zap, Server, Wifi
 } from 'lucide-react';
 import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  AreaChart, Area, BarChart, Bar,
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
@@ -157,8 +157,8 @@ export function AnalyticsPage() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className={`h-2 w-2 rounded-full ${connectionStatus === 'connected' ? 'bg-green-500' :
-                connectionStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
-                  'bg-red-500'
+              connectionStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
+                'bg-red-500'
               }`} />
             <span className="text-sm text-muted-foreground capitalize">{connectionStatus}</span>
           </div>
