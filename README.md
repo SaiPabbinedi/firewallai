@@ -147,8 +147,8 @@ The Adaptive Network Defense System is a comprehensive cybersecurity solution th
 
 ```bash
 # Clone repository
-git clone https://github.com/Katarisai/Cybersecuritydashboarduidesign.git
-cd Cybersecuritydashboarduidesign
+git clone https://github.com/SaiPabbinedi/firewallai.git
+cd firewallai
 
 # Install frontend dependencies
 npm install
