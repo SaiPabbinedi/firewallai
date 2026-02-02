@@ -1,0 +1,634 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": true,
+    "panels": [
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "textMode": "auto"
+            },
+            "targets": [
+                {
+                    "query": "alert.severity:1",
+                    "refId": "A"
+                }
+            ],
+            "title": "Critical (Sev 1)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "orange",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 4,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "query": "alert.severity:2",
+                    "refId": "A"
+                }
+            ],
+            "title": "High (Sev 2)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 8,
+                "y": 0
+            },
+            "id": 3,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "query": "alert.severity:3",
+                    "refId": "A"
+                }
+            ],
+            "title": "Medium (Sev 3)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 4,
+                "x": 12,
+                "y": 0
+            },
+            "id": 4,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "query": "",
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Alerts",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 8,
+                "x": 16,
+                "y": 0
+            },
+            "id": 5,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ]
+                }
+            },
+            "targets": [
+                {
+                    "bucketAggs": [
+                        {
+                            "field": "src_ip",
+                            "id": "2",
+                            "settings": {
+                                "size": "0"
+                            },
+                            "type": "terms"
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "cardinality",
+                            "field": "src_ip"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "Unique Attackers",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "bars",
+                        "fillOpacity": 80,
+                        "gradientMode": "hue",
+                        "lineWidth": 1,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "normal"
+                        }
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 16,
+                "x": 0,
+                "y": 4
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "bucketAggs": [
+                        {
+                            "field": "alert.severity",
+                            "id": "3",
+                            "settings": {
+                                "order": "asc",
+                                "orderBy": "_term"
+                            },
+                            "type": "terms"
+                        },
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "settings": {
+                                "interval": "5m"
+                            },
+                            "type": "date_histogram"
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "query": "",
+                    "refId": "A"
+                }
+            ],
+            "title": "Alerts by Severity Over Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 4
+            },
+            "id": 7,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "values": [
+                        "value"
+                    ]
+                },
+                "pieType": "donut"
+            },
+            "targets": [
+                {
+                    "bucketAggs": [
+                        {
+                            "field": "alert.category.keyword",
+                            "id": "2",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "10"
+                            },
+                            "type": "terms"
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "Alert Categories",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "displayMode": "color-background-solid"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 5
+                            },
+                            {
+                                "color": "orange",
+                                "value": 20
+                            },
+                            {
+                                "color": "red",
+                                "value": 50
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 12
+            },
+            "id": 8,
+            "options": {
+                "footer": {
+                    "enablePagination": true
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Count"
+                    }
+                ]
+            },
+            "targets": [
+                {
+                    "bucketAggs": [
+                        {
+                            "field": "src_ip",
+                            "id": "2",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "20"
+                            },
+                            "type": "terms"
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "Top Attackers by IP",
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "displayMode": "auto"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 12
+            },
+            "id": 9,
+            "options": {
+                "footer": {
+                    "enablePagination": true
+                },
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "bucketAggs": [
+                        {
+                            "field": "alert.signature.keyword",
+                            "id": "2",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "20"
+                            },
+                            "type": "terms"
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "Top Alert Signatures",
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "displayMode": "auto"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 12
+            },
+            "id": 10,
+            "options": {
+                "footer": {
+                    "enablePagination": true
+                },
+                "showHeader": true
+            },
+            "targets": [
+                {
+                    "bucketAggs": [
+                        {
+                            "field": "dest_port",
+                            "id": "2",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "15"
+                            },
+                            "type": "terms"
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "Targeted Ports",
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-SURICATA}"
+            },
+            "gridPos": {
+                "h": 10,
+                "w": 24,
+                "x": 0,
+                "y": 20
+            },
+            "id": 11,
+            "options": {
+                "dedupStrategy": "none",
+                "enableLogDetails": true,
+                "prettifyLogMessage": false,
+                "showTime": true,
+                "sortOrder": "Descending",
+                "wrapLogMessage": true
+            },
+            "targets": [
+                {
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "logs",
+                            "settings": {
+                                "limit": "200"
+                            }
+                        }
+                    ],
+                    "query": "",
+                    "refId": "A"
+                }
+            ],
+            "title": "Alert Stream",
+            "type": "logs"
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "cyber-defense",
+        "suricata",
+        "ids",
+        "security"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Cyber Defense - Threat Detection",
+    "uid": "cyber-threats",
+    "version": 1
+}

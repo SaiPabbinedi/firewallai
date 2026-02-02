@@ -500,6 +500,221 @@ function appendAuditLog(entry) {
 }
 
 // ===========================================
+// Elasticsearch Log Search Endpoints
+// ===========================================
+app.get('/api/logs/search', async (req, res) => {
+    const { query = '*', from = 0, size = 50, startTime = 'now-1h' } = req.query;
+
+    if (!config.elasticsearch.enabled) {
+        // Return mock data if ES not configured
+        return res.json({
+            logs: generateMockLogs(parseInt(size)),
+            total: 500,
+            source: 'mock'
+        });
+    }
+
+    try {
+        const response = await axios.post(`${config.elasticsearch.url}/firewall-events/_search`, {
+            query: {
+                bool: {
+                    must: [
+                        { query_string: { query } },
+                        { range: { '@timestamp': { gte: startTime } } }
+                    ]
+                }
+            },
+            sort: [{ '@timestamp': 'desc' }],
+            from: parseInt(from),
+            size: parseInt(size)
+        }, {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 10000
+        });
+
+        const logs = response.data.hits.hits.map(hit => ({
+            id: hit._id,
+            ...hit._source
+        }));
+
+        res.json({
+            logs,
+            total: response.data.hits.total.value,
+            source: 'elasticsearch'
+        });
+
+    } catch (error) {
+        console.error('[ES ERROR]:', error.message);
+        res.json({
+            logs: generateMockLogs(parseInt(size)),
+            total: 500,
+            source: 'mock',
+            error: error.message
+        });
+    }
+});
+
+app.get('/api/logs/aggregations', async (req, res) => {
+    const { startTime = 'now-1h' } = req.query;
+
+    if (!config.elasticsearch.enabled) {
+        return res.json(generateMockAggregations());
+    }
+
+    try {
+        const response = await axios.post(`${config.elasticsearch.url}/firewall-events/_search`, {
+            size: 0,
+            query: { range: { '@timestamp': { gte: startTime } } },
+            aggs: {
+                actions: { terms: { field: 'action.keyword', size: 10 } },
+                protocols: { terms: { field: 'protocol.keyword', size: 10 } },
+                top_sources: { terms: { field: 'src_ip', size: 20 } },
+                top_destinations: { terms: { field: 'dst_ip', size: 20 } },
+                over_time: {
+                    date_histogram: {
+                        field: '@timestamp',
+                        fixed_interval: '5m'
+                    }
+                }
+            }
+        }, {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 10000
+        });
+
+        res.json(response.data.aggregations);
+
+    } catch (error) {
+        console.error('[ES AGG ERROR]:', error.message);
+        res.json(generateMockAggregations());
+    }
+});
+
+// ===========================================
+// Threat Intelligence Endpoints
+// ===========================================
+app.get('/api/threats/summary', async (req, res) => {
+    const { startTime = 'now-24h' } = req.query;
+
+    if (!config.elasticsearch.enabled) {
+        return res.json(generateMockThreatSummary());
+    }
+
+    try {
+        const [alertsResponse, threatsResponse] = await Promise.all([
+            axios.post(`${config.elasticsearch.url}/suricata-alerts/_search`, {
+                size: 0,
+                query: { range: { '@timestamp': { gte: startTime } } },
+                aggs: {
+                    by_severity: { terms: { field: 'alert.severity' } },
+                    by_category: { terms: { field: 'alert.category.keyword', size: 15 } },
+                    top_attackers: { terms: { field: 'src_ip', size: 10 } },
+                    recent_alerts: {
+                        top_hits: {
+                            size: 10,
+                            sort: [{ '@timestamp': 'desc' }]
+                        }
+                    }
+                }
+            }, { timeout: 10000 }),
+            axios.post(`${config.elasticsearch.url}/threat-sessions/_search`, {
+                size: 0,
+                query: { range: { '@timestamp': { gte: startTime } } },
+                aggs: {
+                    anomalies: { filter: { term: { is_anomaly: true } } },
+                    by_classification: { terms: { field: 'threat_classification.keyword' } }
+                }
+            }, { timeout: 10000 }).catch(() => ({ data: { aggregations: {} } }))
+        ]);
+
+        res.json({
+            severityCounts: alertsResponse.data.aggregations.by_severity.buckets,
+            categories: alertsResponse.data.aggregations.by_category.buckets,
+            topAttackers: alertsResponse.data.aggregations.top_attackers.buckets,
+            recentAlerts: alertsResponse.data.aggregations.recent_alerts.hits.hits.map(h => h._source),
+            anomalyCount: threatsResponse.data.aggregations?.anomalies?.doc_count || 0,
+            classifications: threatsResponse.data.aggregations?.by_classification?.buckets || []
+        });
+
+    } catch (error) {
+        console.error('[THREAT API ERROR]:', error.message);
+        res.json(generateMockThreatSummary());
+    }
+});
+
+app.get('/api/threats/anomalies', async (req, res) => {
+    const { limit = 20 } = req.query;
+
+    if (!config.elasticsearch.enabled) {
+        return res.json({ anomalies: [], source: 'mock' });
+    }
+
+    try {
+        const response = await axios.post(`${config.elasticsearch.url}/threat-sessions/_search`, {
+            query: { term: { is_anomaly: true } },
+            sort: [{ '@timestamp': 'desc' }],
+            size: parseInt(limit)
+        }, { timeout: 10000 });
+
+        res.json({
+            anomalies: response.data.hits.hits.map(h => h._source),
+            total: response.data.hits.total.value,
+            source: 'elasticsearch'
+        });
+
+    } catch (error) {
+        res.json({ anomalies: [], source: 'mock', error: error.message });
+    }
+});
+
+// ===========================================
+// Mock Data Generators (for when ES is offline)
+// ===========================================
+function generateMockLogs(count = 50) {
+    const logs = [];
+    const actions = ['pass', 'block'];
+    const protocols = ['TCP', 'UDP', 'ICMP'];
+    const interfaces = ['wan', 'lan'];
+
+    for (let i = 0; i < count; i++) {
+        const timestamp = new Date(Date.now() - Math.random() * 3600000);
+        logs.push({
+            id: `mock-${i}`,
+            '@timestamp': timestamp.toISOString(),
+            src_ip: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+            dst_ip: `10.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
+            src_port: Math.floor(Math.random() * 65535),
+            dst_port: [80, 443, 22, 3389, 53][Math.floor(Math.random() * 5)],
+            protocol: protocols[Math.floor(Math.random() * protocols.length)],
+            action: actions[Math.floor(Math.random() * actions.length)],
+            interface: interfaces[Math.floor(Math.random() * interfaces.length)]
+        });
+    }
+
+    return logs;
+}
+
+function generateMockAggregations() {
+    return {
+        actions: { buckets: [{ key: 'pass', doc_count: 8500 }, { key: 'block', doc_count: 1500 }] },
+        protocols: { buckets: [{ key: 'TCP', doc_count: 6000 }, { key: 'UDP', doc_count: 3000 }, { key: 'ICMP', doc_count: 1000 }] },
+        top_sources: { buckets: [{ key: '192.168.1.100', doc_count: 500 }, { key: '192.168.1.105', doc_count: 350 }] },
+        over_time: { buckets: [] }
+    };
+}
+
+function generateMockThreatSummary() {
+    return {
+        severityCounts: [{ key: 1, doc_count: 5 }, { key: 2, doc_count: 15 }, { key: 3, doc_count: 45 }],
+        categories: [{ key: 'Attempted Information Leak', doc_count: 25 }, { key: 'Web Application Attack', doc_count: 18 }],
+        topAttackers: [{ key: '203.0.113.50', doc_count: 15 }, { key: '198.51.100.25', doc_count: 8 }],
+        recentAlerts: [],
+        anomalyCount: 3,
+        classifications: [{ key: 'port_scan', doc_count: 5 }, { key: 'brute_force', doc_count: 3 }]
+    };
+}
+
+// ===========================================
 // HTTP Server & Socket.IO
 // ===========================================
 const server = http.createServer(app);
