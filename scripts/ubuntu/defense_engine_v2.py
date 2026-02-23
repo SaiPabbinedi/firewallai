@@ -57,6 +57,26 @@ OLLAMA_URL = 'http://localhost:11434'
 OLLAMA_MODEL = 'llama3.2:3b'
 ELASTICSEARCH_URL = 'http://localhost:9200'
 
+# AlienVault OTX — free threat intelligence API (Zero RAM)
+OTX_API_URL = 'https://otx.alienvault.com/api/v1'
+
+# GeoIP — MaxMind GeoLite2 City flat-file (60MB, zero-RAM lookup)
+GEOIP_DB_PATH = '/opt/firewallai/GeoLite2-City.mmdb'
+
+# MITRE ATT&CK Mapping (classification → technique ID)
+MITRE_ATTACK_MAPPING = {
+    'port_scan':    {'id': 'T1046', 'name': 'Network Service Discovery', 'tactic': 'Discovery'},
+    'brute_force':  {'id': 'T1110', 'name': 'Brute Force', 'tactic': 'Credential Access'},
+    'ddos':         {'id': 'T1498', 'name': 'Network Denial of Service', 'tactic': 'Impact'},
+    'web_attack':   {'id': 'T1190', 'name': 'Exploit Public-Facing App', 'tactic': 'Initial Access'},
+    'ssh_anomaly':  {'id': 'T1021.004', 'name': 'Remote Services: SSH', 'tactic': 'Lateral Movement'},
+    'dns_tunnel':   {'id': 'T1071.004', 'name': 'App Layer Protocol: DNS', 'tactic': 'C2'},
+    'data_exfiltration': {'id': 'T1041', 'name': 'Exfiltration Over C2', 'tactic': 'Exfiltration'},
+    'reconnaissance': {'id': 'T1595', 'name': 'Active Scanning', 'tactic': 'Reconnaissance'},
+    'malware':      {'id': 'T1204', 'name': 'User Execution', 'tactic': 'Execution'},
+    'suspicious':   {'id': 'T1595', 'name': 'Active Scanning', 'tactic': 'Reconnaissance'},
+}
+
 # Anomaly detection thresholds
 ANOMALY_THRESHOLD = -0.5  # Isolation Forest score threshold
 THREAT_SCORE_HIGH = 0.8
@@ -640,6 +660,100 @@ class ElasticsearchPublisher:
 
 
 # ===========================================
+# Threat Intelligence Enricher (NEW - Zero RAM)
+# ===========================================
+class ThreatIntelEnricher:
+    """Enriches threats with external intelligence — zero server RAM cost.
+    
+    Uses:
+    - AlienVault OTX API (free, cloud-based) for IP reputation
+    - MaxMind GeoLite2 flat-file (60MB) for geolocation
+    - MITRE ATT&CK mapping (in-memory dict, <1KB)
+    """
+
+    def __init__(self):
+        self.geoip_reader = None
+        self._init_geoip()
+        self._otx_cache = {}  # {ip: {data, timestamp}}
+        self._cache_ttl = 3600  # 1 hour
+
+    def _init_geoip(self):
+        """Initialize GeoIP reader from MaxMind flat-file"""
+        try:
+            import geoip2.database
+            self.geoip_reader = geoip2.database.Reader(GEOIP_DB_PATH)
+            logger.info(f"GeoIP database loaded from {GEOIP_DB_PATH}")
+        except ImportError:
+            logger.warning("geoip2 not installed — run: pip install geoip2")
+        except FileNotFoundError:
+            logger.warning(f"GeoIP DB not found at {GEOIP_DB_PATH} — geo enrichment disabled")
+            logger.info("Download from: https://dev.maxmind.com/geoip/geolite2-free-geolocation-data")
+        except Exception as e:
+            logger.warning(f"GeoIP init error: {e}")
+
+    def get_geo(self, ip):
+        """Resolve IP to latitude/longitude/country using local flat-file DB.
+        Returns dict with lat, lng, country, country_code, city."""
+        if not self.geoip_reader:
+            return None
+        try:
+            response = self.geoip_reader.city(ip)
+            return {
+                'lat': response.location.latitude,
+                'lng': response.location.longitude,
+                'country': response.country.name or 'Unknown',
+                'country_code': response.country.iso_code or 'XX',
+                'city': response.city.name or ''
+            }
+        except Exception:
+            return None
+
+    def get_otx_reputation(self, ip):
+        """Query AlienVault OTX for IP reputation (cloud API, zero RAM).
+        Returns dict with reputation score, pulse count, tags."""
+        # Check cache first
+        if ip in self._otx_cache:
+            cached = self._otx_cache[ip]
+            if time.time() - cached['timestamp'] < self._cache_ttl:
+                return cached['data']
+
+        try:
+            response = requests.get(
+                f"{OTX_API_URL}/indicators/IPv4/{ip}/general",
+                timeout=5,
+                headers={'Accept': 'application/json'}
+            )
+            if response.status_code == 200:
+                d = response.json()
+                result = {
+                    'reputation': d.get('reputation', 0),
+                    'pulse_count': d.get('pulse_info', {}).get('count', 0),
+                    'country': d.get('country_name', 'Unknown'),
+                    'asn': d.get('asn', 'Unknown'),
+                    'tags': [p.get('name', '') for p in d.get('pulse_info', {}).get('pulses', [])[:5]]
+                }
+                self._otx_cache[ip] = {'data': result, 'timestamp': time.time()}
+                return result
+        except Exception as e:
+            logger.debug(f"OTX lookup failed for {ip}: {e}")
+
+        return {'reputation': 0, 'pulse_count': 0, 'country': 'Unknown', 'asn': 'Unknown', 'tags': []}
+
+    def get_mitre_technique(self, classification):
+        """Map a threat classification to MITRE ATT&CK technique."""
+        return MITRE_ATTACK_MAPPING.get(classification, MITRE_ATTACK_MAPPING.get('suspicious'))
+
+    def enrich_threat(self, ip, classification):
+        """Full enrichment: GeoIP + OTX + MITRE mapping."""
+        result = {
+            'mitre': self.get_mitre_technique(classification),
+            'geo': self.get_geo(ip),
+            'otx': self.get_otx_reputation(ip)
+        }
+        return result
+
+
+# ===========================================
 # Main Defense Engine
 # ===========================================
 class DefenseEngine:
@@ -652,6 +766,7 @@ class DefenseEngine:
         self.threat_aggregator = ThreatAggregator()
         self.metrics_tracker = MetricsTracker()
         self.es_publisher = ElasticsearchPublisher()
+        self.threat_enricher = ThreatIntelEnricher()  # NEW: zero-RAM enricher
         self.kafka_producer = None
         self.spark = None
 
@@ -848,7 +963,10 @@ class DefenseEngine:
                             self.metrics_tracker.record_rule_generated(is_automated=True)
                             logger.info(f"🛡️ Recommended Rule: {json.dumps(rule)}")
 
-                        # Publish full threat session to ES
+                        # NEW: Enrich threat with MITRE + GeoIP + OTX
+                        enrichment = self.threat_enricher.enrich_threat(ip, threat_type)
+
+                        # Publish full threat session to ES (now enriched)
                         threat_doc = {
                             '@timestamp': datetime.utcnow().isoformat() + 'Z',
                             'session_id': str(uuid.uuid4()),
@@ -863,6 +981,10 @@ class DefenseEngine:
                             'llm_analysis': llm_result,
                             'llm_latency_ms': llm_latency,
                             'mttr_seconds': mttr_seconds,
+                            # NEW enrichments
+                            'mitre_technique': enrichment['mitre'],
+                            'geo': enrichment['geo'],
+                            'otx_reputation': enrichment['otx'],
                             'automated_action': {
                                 'type': rule.get('type', 'ip') if rule else None,
                                 'target': rule.get('target', ip) if rule else ip,

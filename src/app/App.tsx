@@ -9,6 +9,8 @@ import { AnalyticsPage } from './components/AnalyticsPage';
 import { AIInsightsPage } from './components/AIInsightsPage';
 import { AIMetricsPage } from './components/AIMetricsPage';
 import { SettingsPage } from './components/SettingsPage';
+import { ThreatMapPage } from './components/ThreatMapPage';
+import { TopologyPage } from './components/TopologyPage';
 import { GrafanaPage } from './components/GrafanaPage';
 import { TerminalPage } from './components/Terminal/TerminalPage';
 import { TerminalSessionProvider } from './components/Terminal/TerminalSessionManager';
@@ -66,6 +68,10 @@ export default function App() {
         return <FirewallRulesPage />;
       case 'analytics':
         return <AnalyticsPage />;
+      case 'threat-map':
+        return <ThreatMapPage />;
+      case 'topology':
+        return <TopologyPage />;
       case 'ai-insights':
         return <AIInsightsPage />;
       case 'ai-metrics':

@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Shield, BarChart3, Brain, Settings, Terminal, Activity, Cpu } from 'lucide-react';
+import { LayoutDashboard, FileText, Shield, BarChart3, Brain, Settings, Terminal, Activity, Cpu, Globe, Network } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -43,6 +43,18 @@ const menuItems = [
     description: 'Traffic trends & statistics'
   },
   {
+    id: 'threat-map',
+    label: 'Threat Map',
+    icon: Globe,
+    description: 'Global attack visualization'
+  },
+  {
+    id: 'topology',
+    label: 'Topology',
+    icon: Network,
+    description: 'Network infrastructure map'
+  },
+  {
     id: 'ai-insights',
     label: 'AI Insights',
     icon: Brain,
@@ -52,7 +64,7 @@ const menuItems = [
     id: 'ai-metrics',
     label: 'AI Metrics',
     icon: Cpu,
-    description: 'ML model performance & defense analytics'
+    description: 'Model performance & analytics'
   },
   {
     id: 'settings',
@@ -107,11 +119,11 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
                     style={{ boxShadow: '0 0 10px var(--primary)' }}
                   />
                 )}
-                <Icon className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
-                <div className="flex-1 text-left">
-                  <span className="text-sm font-medium block">{item.label}</span>
+                <Icon className={`h-5 w-5 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                <div className="flex-1 min-w-0 text-left">
+                  <span className="text-sm font-medium block truncate">{item.label}</span>
                   {isActive && (
-                    <span className="text-xs text-muted-foreground block mt-0.5 truncate">
+                    <span className="text-xs text-muted-foreground block mt-0.5 truncate max-w-[180px]">
                       {item.description}
                     </span>
                   )}
