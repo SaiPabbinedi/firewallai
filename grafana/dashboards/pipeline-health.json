@@ -1,0 +1,601 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": true,
+    "panels": [
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "ops",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 100000
+                            },
+                            {
+                                "color": "red",
+                                "value": 200000
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*events_per_second.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "events_per_second"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📡 Events/Second (Kafka EPS)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "ms",
+                    "max": 10000,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 3000
+                            },
+                            {
+                                "color": "red",
+                                "value": 8000
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*avg_llm_latency_ms.*/",
+                    "values": false
+                },
+                "showThresholdMarkers": true
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_llm_latency_ms"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🤖 LLM API Latency",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 1000000
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 0
+            },
+            "id": 3,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*events_processed_total.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "events_processed_total"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📦 Total Events Processed",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 50
+                            },
+                            {
+                                "color": "red",
+                                "value": 100
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 0
+            },
+            "id": 4,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*sessions_analyzed_total.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "sessions_analyzed_total"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🧠 Sessions Analyzed",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 30,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 5,
+                        "spanNulls": true
+                    },
+                    "unit": "ops"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 4
+            },
+            "id": 5,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "events_per_second"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "1m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📡 Streaming Ingestion Rate (Events/Second)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 15,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2
+                    },
+                    "unit": "ms"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 4
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_llm_latency_ms"
+                        },
+                        {
+                            "id": "2",
+                            "type": "max",
+                            "field": "max_llm_latency_ms"
+                        },
+                        {
+                            "id": "3",
+                            "type": "min",
+                            "field": "min_llm_latency_ms"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "4",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "⚡ LLM API Latency Over Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 10,
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 12
+            },
+            "id": 7,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "anomalies_detected_total"
+                        },
+                        {
+                            "id": "2",
+                            "type": "max",
+                            "field": "rules_generated_total"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "3",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📊 Cumulative Anomalies & Rules",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2
+                    },
+                    "unit": "s"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 12
+            },
+            "id": 8,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_mttr_seconds"
+                        },
+                        {
+                            "id": "2",
+                            "type": "avg",
+                            "field": "avg_anomaly_score"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "3",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📈 Defense Metrics Trend",
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "cyber-defense",
+        "pipeline",
+        "kafka",
+        "spark",
+        "health"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Cyber Defense - Pipeline Health",
+    "uid": "cyber-pipeline",
+    "version": 1
+}

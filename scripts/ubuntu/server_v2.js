@@ -668,6 +668,94 @@ app.get('/api/threats/anomalies', async (req, res) => {
 });
 
 // ===========================================
+// AI Metrics Snapshot Endpoint (for AIMetricsPage)
+// ===========================================
+app.get('/api/metrics/snapshot', async (req, res) => {
+    const { startTime = 'now-1h' } = req.query;
+
+    if (!config.elasticsearch.enabled) {
+        return res.json(generateMockMetricsSnapshot());
+    }
+
+    try {
+        const [snapshotRes, anomalyScoresRes, mttrRes] = await Promise.all([
+            // Latest engine snapshot
+            axios.post(`${config.elasticsearch.url}/ai-metrics/_search`, {
+                size: 1,
+                query: { term: { metric_type: 'engine_snapshot' } },
+                sort: [{ '@timestamp': 'desc' }]
+            }, { timeout: 10000 }).catch(() => null),
+
+            // Recent anomaly scores for chart
+            axios.post(`${config.elasticsearch.url}/ai-metrics/_search`, {
+                size: 50,
+                query: {
+                    bool: {
+                        must: [
+                            { term: { metric_type: 'anomaly_score' } },
+                            { range: { '@timestamp': { gte: startTime } } }
+                        ]
+                    }
+                },
+                sort: [{ '@timestamp': 'desc' }]
+            }, { timeout: 10000 }).catch(() => null),
+
+            // Recent MTTR entries
+            axios.post(`${config.elasticsearch.url}/ai-metrics/_search`, {
+                size: 50,
+                query: {
+                    bool: {
+                        must: [
+                            { term: { metric_type: 'mttr' } },
+                            { range: { '@timestamp': { gte: startTime } } }
+                        ]
+                    }
+                },
+                sort: [{ '@timestamp': 'desc' }]
+            }, { timeout: 10000 }).catch(() => null)
+        ]);
+
+        const snapshot = snapshotRes?.data?.hits?.hits?.[0]?._source || {};
+        const anomalyScores = anomalyScoresRes?.data?.hits?.hits?.map(h => h._source) || [];
+        const mttrEntries = mttrRes?.data?.hits?.hits?.map(h => h._source) || [];
+
+        res.json({
+            snapshot: {
+                anomalies_detected_total: snapshot.anomalies_detected_total || 0,
+                rules_generated_total: snapshot.rules_generated_total || 0,
+                avg_classification_confidence: snapshot.avg_classification_confidence || 0,
+                avg_llm_latency_ms: snapshot.avg_llm_latency_ms || 0,
+                avg_anomaly_score: snapshot.avg_anomaly_score || 0,
+                avg_mttr_seconds: snapshot.avg_mttr_seconds || 0,
+                sub_3s_response_rate: snapshot.sub_3s_response_rate || 0,
+                events_per_second: snapshot.events_per_second || 0,
+                events_processed_total: snapshot.events_processed_total || 0,
+                auto_blocks: snapshot.auto_blocks || 0,
+                manual_blocks: snapshot.manual_blocks || 0,
+                sessions_analyzed_total: snapshot.sessions_analyzed_total || 0,
+            },
+            anomalyScores: anomalyScores.map(s => ({
+                time: s['@timestamp'],
+                score: s.anomaly_score,
+                isAnomaly: s.is_anomaly,
+                classification: s.classification
+            })),
+            mttrEntries: mttrEntries.map(m => ({
+                time: m['@timestamp'],
+                mttr: m.mttr_seconds,
+                classification: m.classification,
+                srcIp: m.src_ip
+            })),
+            source: 'elasticsearch'
+        });
+
+    } catch (error) {
+        console.error('[METRICS API ERROR]:', error.message);
+        res.json(generateMockMetricsSnapshot());
+    }
+});
+
+// ===========================================
 // Mock Data Generators (for when ES is offline)
 // ===========================================
 function generateMockLogs(count = 50) {
@@ -704,13 +792,110 @@ function generateMockAggregations() {
 }
 
 function generateMockThreatSummary() {
+    // Diverse attack types matching Kali simulation scripts
     return {
-        severityCounts: [{ key: 1, doc_count: 5 }, { key: 2, doc_count: 15 }, { key: 3, doc_count: 45 }],
-        categories: [{ key: 'Attempted Information Leak', doc_count: 25 }, { key: 'Web Application Attack', doc_count: 18 }],
-        topAttackers: [{ key: '203.0.113.50', doc_count: 15 }, { key: '198.51.100.25', doc_count: 8 }],
-        recentAlerts: [],
-        anomalyCount: 3,
-        classifications: [{ key: 'port_scan', doc_count: 5 }, { key: 'brute_force', doc_count: 3 }]
+        severityCounts: [
+            { key: 1, doc_count: 8 },   // Low: DNS tunneling, slow probes
+            { key: 2, doc_count: 22 },   // Medium: port scans, web enumeration
+            { key: 3, doc_count: 35 }    // High: brute force, DDoS, exploits
+        ],
+        categories: [
+            { key: 'Port Scan / Network Recon', doc_count: 28 },
+            { key: 'SSH Brute Force', doc_count: 15 },
+            { key: 'Web Application Attack', doc_count: 18 },
+            { key: 'DDoS / Flood', doc_count: 12 },
+            { key: 'DNS Tunneling', doc_count: 5 },
+            { key: 'SQL Injection', doc_count: 8 },
+            { key: 'XSS Attack', doc_count: 6 },
+            { key: 'Directory Traversal', doc_count: 4 }
+        ],
+        topAttackers: [
+            { key: '192.168.56.102', doc_count: 42 },   // Kali VM
+            { key: '203.0.113.50', doc_count: 15 },
+            { key: '198.51.100.25', doc_count: 8 },
+            { key: '10.0.2.15', doc_count: 6 },
+            { key: '172.16.0.100', doc_count: 4 }
+        ],
+        recentAlerts: [
+            {
+                '@timestamp': new Date(Date.now() - 30000).toISOString(),
+                src_ip: '192.168.56.102',
+                dest_ip: '192.168.1.1',
+                alert: { signature: 'ET SCAN Nmap SYN Scan', severity: 2, category: 'Port Scan' }
+            },
+            {
+                '@timestamp': new Date(Date.now() - 120000).toISOString(),
+                src_ip: '192.168.56.102',
+                dest_ip: '192.168.1.1',
+                alert: { signature: 'ET BRUTE FORCE SSH', severity: 3, category: 'Brute Force' }
+            },
+            {
+                '@timestamp': new Date(Date.now() - 300000).toISOString(),
+                src_ip: '203.0.113.50',
+                dest_ip: '192.168.1.100',
+                alert: { signature: 'ET WEB_SERVER SQL Injection Attempt', severity: 3, category: 'Web Application Attack' }
+            }
+        ],
+        anomalyCount: 18,
+        classifications: [
+            { key: 'port_scan', doc_count: 14 },
+            { key: 'brute_force', doc_count: 10 },
+            { key: 'ddos', doc_count: 8 },
+            { key: 'web_attack', doc_count: 9 },
+            { key: 'sql_injection', doc_count: 5 },
+            { key: 'dns_tunneling', doc_count: 3 },
+            { key: 'xss', doc_count: 4 },
+            { key: 'directory_traversal', doc_count: 2 }
+        ]
+    };
+}
+
+function generateMockMetricsSnapshot() {
+    const now = Date.now();
+    const attackTypes = ['port_scan', 'brute_force', 'ddos', 'web_attack', 'sql_injection', 'xss', 'dns_tunneling'];
+    const sourceIPs = ['192.168.56.102', '203.0.113.50', '198.51.100.25', '10.0.2.15'];
+
+    // Generate realistic anomaly score history
+    const anomalyScores = [];
+    for (let i = 0; i < 30; i++) {
+        const isAnomaly = Math.random() > 0.6;
+        anomalyScores.push({
+            time: new Date(now - (30 - i) * 120000).toISOString(),
+            score: isAnomaly ? -0.6 - Math.random() * 0.4 : -0.1 + Math.random() * 0.3,
+            isAnomaly,
+            classification: isAnomaly ? attackTypes[Math.floor(Math.random() * attackTypes.length)] : 'normal'
+        });
+    }
+
+    // Generate MTTR entries
+    const mttrEntries = [];
+    for (let i = 0; i < 15; i++) {
+        mttrEntries.push({
+            time: new Date(now - (15 - i) * 300000).toISOString(),
+            mttr: 0.8 + Math.random() * 3.5,
+            classification: attackTypes[Math.floor(Math.random() * attackTypes.length)],
+            srcIp: sourceIPs[Math.floor(Math.random() * sourceIPs.length)]
+        });
+    }
+
+    return {
+        snapshot: {
+            anomalies_detected_total: 18 + Math.floor(Math.random() * 5),
+            rules_generated_total: 12 + Math.floor(Math.random() * 3),
+            avg_classification_confidence: 0.87 + Math.random() * 0.08,
+            avg_llm_latency_ms: 800 + Math.random() * 1500,
+            avg_anomaly_score: -0.3 + Math.random() * 0.2,
+            avg_mttr_seconds: 1.5 + Math.random() * 2.0,
+            sub_3s_response_rate: 85 + Math.random() * 12,
+            events_per_second: Math.floor(2000 + Math.random() * 1500),
+            events_processed_total: 125000 + Math.floor(Math.random() * 10000),
+            auto_blocks: 14 + Math.floor(Math.random() * 5),
+            manual_blocks: 3 + Math.floor(Math.random() * 2),
+            sessions_analyzed_total: 55 + Math.floor(Math.random() * 10),
+        },
+        anomalyScores,
+        mttrEntries,
+        source: 'mock'
     };
 }
 
@@ -752,7 +937,9 @@ async function initializeKafka() {
         topics: [
             config.kafka.topics.firewallLogs,
             config.kafka.topics.suricataAlerts,
-            config.kafka.topics.realtimeMetrics
+            config.kafka.topics.realtimeMetrics,
+            'ai-analysis',
+            'ai-metrics'
         ],
         fromBeginning: false
     });

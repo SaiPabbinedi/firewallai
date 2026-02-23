@@ -1,0 +1,661 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": true,
+    "panels": [
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-THREATS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 5
+                            },
+                            {
+                                "color": "red",
+                                "value": 20
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "count"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "is_anomaly:true",
+                    "refId": "A"
+                }
+            ],
+            "title": "🚨 Total Anomalies Detected",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 100
+                            },
+                            {
+                                "color": "red",
+                                "value": 500
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 6,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*rules_generated_total.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "rules_generated_total"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🛡️ AI Rules Generated",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "percent",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 50
+                            },
+                            {
+                                "color": "green",
+                                "value": 90
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 0
+            },
+            "id": 3,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*avg_classification_confidence.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_classification_confidence"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🎯 Avg Classification Confidence",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "ms",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 2000
+                            },
+                            {
+                                "color": "red",
+                                "value": 5000
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 18,
+                "y": 0
+            },
+            "id": 4,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*avg_llm_latency_ms.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_llm_latency_ms"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "⚡ Avg LLM Latency",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "bars",
+                        "fillOpacity": 70,
+                        "gradientMode": "hue",
+                        "lineWidth": 1,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "none"
+                        }
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 4
+            },
+            "id": 5,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:anomaly_score",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "anomaly_score"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "is_anomaly",
+                            "id": "3",
+                            "type": "terms",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "5"
+                            }
+                        },
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📊 Anomaly Score Distribution Over Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-THREATS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "displayMode": "gradient-gauge"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 0.5
+                            },
+                            {
+                                "color": "green",
+                                "value": 0.8
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 4
+            },
+            "id": 6,
+            "options": {
+                "footer": {
+                    "enablePagination": true
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "Confidence"
+                    }
+                ]
+            },
+            "targets": [
+                {
+                    "query": "is_anomaly:true",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "threat_confidence"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "threat_classification.keyword",
+                            "id": "2",
+                            "type": "terms",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "10"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🎯 Threat Classification Confidence",
+            "type": "table"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-THREATS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 0,
+                "y": 12
+            },
+            "id": 7,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "values": [
+                        "value",
+                        "percent"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "sum"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "tooltip": {
+                    "mode": "single"
+                }
+            },
+            "targets": [
+                {
+                    "query": "is_anomaly:true",
+                    "bucketAggs": [
+                        {
+                            "field": "threat_classification.keyword",
+                            "id": "2",
+                            "type": "terms",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "10"
+                            }
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "🔍 Threat Type Distribution",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-THREATS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 8,
+                "y": 12
+            },
+            "id": 8,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "values": [
+                        "value"
+                    ]
+                },
+                "pieType": "donut"
+            },
+            "targets": [
+                {
+                    "query": "is_anomaly:true",
+                    "bucketAggs": [
+                        {
+                            "field": "llm_analysis.threat_level.keyword",
+                            "id": "2",
+                            "type": "terms",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "5"
+                            }
+                        }
+                    ],
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "refId": "A"
+                }
+            ],
+            "title": "⚠️ Threat Level Distribution",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 15,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "pointSize": 4,
+                        "spanNulls": true
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 8,
+                "x": 16,
+                "y": 12
+            },
+            "id": 9,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_classification_confidence"
+                        },
+                        {
+                            "id": "2",
+                            "type": "avg",
+                            "field": "avg_anomaly_score"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "3",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📈 ML Confidence & Anomaly Trend",
+            "type": "timeseries"
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "cyber-defense",
+        "ai",
+        "ml",
+        "anomaly-detection"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Cyber Defense - AI & ML Metrics",
+    "uid": "cyber-ai-ml",
+    "version": 1
+}

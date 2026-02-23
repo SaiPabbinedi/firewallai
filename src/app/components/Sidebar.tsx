@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Shield, BarChart3, Brain, Settings, Terminal, Activity } from 'lucide-react';
+import { LayoutDashboard, FileText, Shield, BarChart3, Brain, Settings, Terminal, Activity, Cpu } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -47,6 +47,12 @@ const menuItems = [
     label: 'AI Insights',
     icon: Brain,
     description: 'ML-powered threat detection'
+  },
+  {
+    id: 'ai-metrics',
+    label: 'AI Metrics',
+    icon: Cpu,
+    description: 'ML model performance & defense analytics'
   },
   {
     id: 'settings',

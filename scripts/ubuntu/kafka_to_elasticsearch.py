@@ -34,6 +34,7 @@ TOPIC_INDEX_MAP = {
     'suricata-alerts': 'suricata-alerts',
     'threat-intel': 'threat-sessions',
     'ai-analysis': 'threat-sessions',
+    'ai-metrics': 'ai-metrics',
     'automation-audit': 'audit-logs'
 }
 
@@ -142,6 +143,12 @@ class DocumentTransformer:
         
         return {k: v for k, v in doc.items() if v is not None}
     
+    @staticmethod
+    def transform_ai_metrics(data: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform AI/ML metrics to ES document (mostly passthrough)"""
+        data['@timestamp'] = data.get('@timestamp') or datetime.utcnow().isoformat()
+        return data
+
     def transform(self, topic: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Route to appropriate transformer based on topic"""
         if topic == 'firewall-logs':
@@ -150,6 +157,8 @@ class DocumentTransformer:
             return self.transform_suricata_alert(data)
         elif topic in ['threat-intel', 'ai-analysis']:
             return self.transform_threat_session(data)
+        elif topic == 'ai-metrics':
+            return self.transform_ai_metrics(data)
         else:
             # Generic passthrough with timestamp
             data['@timestamp'] = data.get('@timestamp') or datetime.utcnow().isoformat()

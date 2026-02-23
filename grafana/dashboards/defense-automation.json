@@ -1,0 +1,542 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 1,
+    "id": null,
+    "links": [],
+    "liveNow": true,
+    "panels": [
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "s",
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 3
+                            },
+                            {
+                                "color": "red",
+                                "value": 10
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 6,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*avg_mttr_seconds.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "avg_mttr_seconds"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "⏱️ MTTR (Mean Time to Respond)",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "unit": "percent",
+                    "max": 100,
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "red",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 50
+                            },
+                            {
+                                "color": "green",
+                                "value": 90
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 6,
+                "x": 6,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*sub_3s_response_rate.*/",
+                    "values": false
+                },
+                "showThresholdMarkers": true,
+                "showThresholdLabels": false
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "sub_3s_response_rate"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🚀 Sub-3s Response Rate",
+            "type": "gauge"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 6,
+                "x": 12,
+                "y": 0
+            },
+            "id": 3,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right",
+                    "values": [
+                        "value",
+                        "percent"
+                    ]
+                },
+                "pieType": "donut",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "auto_blocks"
+                        },
+                        {
+                            "id": "2",
+                            "type": "avg",
+                            "field": "manual_blocks"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "3",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🤖 Automated vs Manual Blocks",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 10
+                            },
+                            {
+                                "color": "red",
+                                "value": 50
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 5,
+                "w": 6,
+                "x": 18,
+                "y": 0
+            },
+            "id": 4,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "/.*rules_generated_total.*/",
+                    "values": false
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:engine_snapshot",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "max",
+                            "field": "rules_generated_total"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "auto"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🛡️ Total Rules Applied",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "line",
+                        "fillOpacity": 20,
+                        "gradientMode": "opacity",
+                        "lineInterpolation": "smooth",
+                        "lineWidth": 2,
+                        "showPoints": "auto",
+                        "spanNulls": true
+                    },
+                    "unit": "s"
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 5
+            },
+            "id": 5,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:mttr",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "avg",
+                            "field": "mttr_seconds"
+                        },
+                        {
+                            "id": "2",
+                            "type": "max",
+                            "field": "mttr_seconds"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "@timestamp",
+                            "id": "3",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📈 MTTR Over Time (Avg & Max)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    },
+                    "custom": {
+                        "drawStyle": "bars",
+                        "fillOpacity": 80,
+                        "gradientMode": "hue",
+                        "lineWidth": 1,
+                        "stacking": {
+                            "group": "A",
+                            "mode": "normal"
+                        }
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 5
+            },
+            "id": 6,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "tooltip": {
+                    "mode": "multi"
+                }
+            },
+            "targets": [
+                {
+                    "query": "metric_type:mttr",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "count"
+                        }
+                    ],
+                    "bucketAggs": [
+                        {
+                            "field": "classification.keyword",
+                            "id": "3",
+                            "type": "terms",
+                            "settings": {
+                                "order": "desc",
+                                "orderBy": "_count",
+                                "size": "10"
+                            }
+                        },
+                        {
+                            "field": "@timestamp",
+                            "id": "2",
+                            "type": "date_histogram",
+                            "settings": {
+                                "interval": "5m"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "🏷️ Blocks by Attack Type Over Time",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "elasticsearch",
+                "uid": "${DS_ELASTICSEARCH-METRICS}"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "custom": {
+                        "displayMode": "color-background-solid"
+                    },
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "blue",
+                                "value": null
+                            },
+                            {
+                                "color": "yellow",
+                                "value": 3
+                            },
+                            {
+                                "color": "red",
+                                "value": 10
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 13
+            },
+            "id": 7,
+            "options": {
+                "footer": {
+                    "enablePagination": true
+                },
+                "showHeader": true,
+                "sortBy": [
+                    {
+                        "desc": true,
+                        "displayName": "@timestamp"
+                    }
+                ]
+            },
+            "targets": [
+                {
+                    "query": "metric_type:mttr",
+                    "metrics": [
+                        {
+                            "id": "1",
+                            "type": "raw_data",
+                            "settings": {
+                                "size": "50"
+                            }
+                        }
+                    ],
+                    "refId": "A",
+                    "timeField": "@timestamp"
+                }
+            ],
+            "title": "📋 Recent Automated Actions Log",
+            "type": "table"
+        }
+    ],
+    "refresh": "10s",
+    "schemaVersion": 38,
+    "style": "dark",
+    "tags": [
+        "cyber-defense",
+        "automation",
+        "mttr",
+        "defense"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-6h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "title": "Cyber Defense - Automated Defense",
+    "uid": "cyber-defense-auto",
+    "version": 1
+}

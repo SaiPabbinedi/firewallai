@@ -256,6 +256,64 @@ cat > ~/cyber-defense/elasticsearch/templates/threat-sessions.json << 'EOF'
 }
 EOF
 
+# AI Metrics Template (for defense_engine_v2.py MetricsTracker output)
+cat > ~/cyber-defense/elasticsearch/templates/ai-metrics.json << 'EOF'
+{
+  "index_patterns": ["ai-metrics-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0,
+      "index.lifecycle.name": "ai-metrics-policy",
+      "index.lifecycle.rollover_alias": "ai-metrics"
+    },
+    "mappings": {
+      "properties": {
+        "@timestamp": { "type": "date" },
+        "metric_type": { "type": "keyword" },
+        "source": { "type": "keyword" },
+
+        "anomalies_detected_window": { "type": "integer" },
+        "anomalies_detected_total": { "type": "long" },
+        "avg_anomaly_score": { "type": "float" },
+        "anomaly_score_min": { "type": "float" },
+        "anomaly_score_max": { "type": "float" },
+        "anomaly_score": { "type": "float" },
+        "is_anomaly": { "type": "boolean" },
+
+        "avg_classification_confidence": { "type": "float" },
+        "threat_confidence": { "type": "float" },
+        "classification": { "type": "keyword" },
+        "threat_classification": { "type": "keyword" },
+
+        "avg_llm_latency_ms": { "type": "float" },
+        "max_llm_latency_ms": { "type": "float" },
+        "min_llm_latency_ms": { "type": "float" },
+        "llm_latency_ms": { "type": "float" },
+
+        "avg_mttr_seconds": { "type": "float" },
+        "min_mttr_seconds": { "type": "float" },
+        "max_mttr_seconds": { "type": "float" },
+        "mttr_seconds": { "type": "float" },
+        "sub_3s_response_rate": { "type": "float" },
+
+        "rules_generated_window": { "type": "integer" },
+        "rules_generated_total": { "type": "long" },
+        "auto_blocks": { "type": "integer" },
+        "manual_blocks": { "type": "integer" },
+
+        "events_processed_total": { "type": "long" },
+        "events_per_second": { "type": "float" },
+        "sessions_analyzed_total": { "type": "long" },
+
+        "src_ip": { "type": "ip" },
+        "session_id": { "type": "keyword" }
+      }
+    }
+  }
+}
+EOF
+
 echo "Templates created in ~/cyber-defense/elasticsearch/templates/"
 
 # ===========================================
@@ -338,6 +396,25 @@ curl -s -X PUT "http://localhost:9200/threat-sessions-000001" \
     -H "Content-Type: application/json" \
     -d '{ "aliases": { "threat-sessions": { "is_write_index": true } } }'
 
+curl -s -X PUT "http://localhost:9200/_index_template/ai-metrics" \
+    -H "Content-Type: application/json" \
+    -d @~/cyber-defense/elasticsearch/templates/ai-metrics.json
+
+curl -s -X PUT "http://localhost:9200/_ilm/policy/ai-metrics-policy" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "policy": {
+            "phases": {
+                "hot": { "actions": { "rollover": { "max_size": "2gb", "max_age": "7d" } } },
+                "delete": { "min_age": "30d", "actions": { "delete": {} } }
+            }
+        }
+    }'
+
+curl -s -X PUT "http://localhost:9200/ai-metrics-000001" \
+    -H "Content-Type: application/json" \
+    -d '{ "aliases": { "ai-metrics": { "is_write_index": true } } }'
+
 echo ""
 echo "╔═══════════════════════════════════════════════════════════╗"
 echo "║   ELASTICSEARCH SETUP COMPLETE!                            ║"
@@ -349,6 +426,7 @@ echo "Indices created:"
 echo "  - firewall-events (alias for rolling indices)"
 echo "  - suricata-alerts (alias for rolling indices)"
 echo "  - threat-sessions (alias for rolling indices)"
+echo "  - ai-metrics     (alias for rolling indices)"
 echo ""
 echo "Test with: curl http://localhost:9200/_cat/indices?v"
 echo ""
