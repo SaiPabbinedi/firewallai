@@ -246,8 +246,8 @@ org_role = Viewer`}
                 <div
                     className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm"
                     style={{
-                        background: 'rgba(20, 24, 40, 0.5)',
-                        backdropFilter: 'blur(10px)',
+                        background: 'var(--glass-bg)',
+                        backdropFilter: 'blur(16px)',
                     }}
                 >
                     <h3 className="font-semibold mb-4">Grafana Configuration</h3>
@@ -375,8 +375,8 @@ org_role = Viewer`}
                 className={`rounded-lg border border-border bg-card/50 overflow-hidden ${isFullscreen ? 'flex-1' : ''
                     }`}
                 style={{
-                    background: 'rgba(20, 24, 40, 0.5)',
-                    backdropFilter: 'blur(10px)',
+                    background: 'var(--glass-bg)',
+                    backdropFilter: 'blur(16px)',
                     height: isFullscreen ? 'calc(100vh - 200px)' : '550px',
                 }}
             >
@@ -412,8 +412,8 @@ org_role = Viewer`}
             <div
                 className="rounded-lg border border-border bg-card/50 p-4 backdrop-blur-sm"
                 style={{
-                    background: 'rgba(20, 24, 40, 0.5)',
-                    backdropFilter: 'blur(10px)',
+                    background: 'var(--glass-bg)',
+                    backdropFilter: 'blur(16px)',
                 }}
             >
                 <div className="flex items-center justify-between mb-3">

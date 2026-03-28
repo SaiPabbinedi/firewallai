@@ -8,6 +8,7 @@ import {
     ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
     RadialBarChart, RadialBar, Legend, Area, AreaChart
 } from 'recharts';
+import { motion } from 'framer-motion';
 
 const BACKEND_URL = 'http://192.168.1.101:3001';
 
@@ -63,13 +64,16 @@ interface ThreatSummary {
 const COLORS = ['#00d9ff', '#7c3aed', '#f59e0b', '#ef4444', '#10b981', '#f97316', '#06b6d4', '#ec4899'];
 
 const glassCard = {
-    background: 'rgba(20, 24, 40, 0.5)',
+    background: 'var(--glass-bg)',
     backdropFilter: 'blur(10px)',
+    boxShadow: '0 4px 24px var(--glass-shadow)',
+    borderColor: 'var(--glass-border)',
 };
 
 const tooltipStyle = {
-    backgroundColor: '#1a1f35',
-    border: '1px solid rgba(0, 217, 255, 0.3)',
+    backgroundColor: 'var(--glass-bg)',
+    backdropFilter: 'blur(12px)',
+    border: '1px solid var(--glass-border)',
     borderRadius: '8px',
     color: '#e4e7eb',
 };
@@ -154,6 +158,7 @@ export function AIMetricsPage() {
     ];
 
     return (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
@@ -238,8 +243,10 @@ export function AIMetricsPage() {
                     return (
                         <div
                             key={card.title}
-                            className="rounded-lg border border-border bg-card/50 p-5 backdrop-blur-sm transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 group"
-                            style={glassCard}
+                            className="rounded-lg border border-border bg-card/50 p-5 backdrop-blur-sm transition-all hover:shadow-lg hover:shadow-primary/5 group"
+                            style={{ ...glassCard, ['--hover-border-color' as string]: 'var(--glass-hover-border)' }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
                         >
                             <div className="flex items-start justify-between">
                                 <div>
@@ -283,8 +290,8 @@ export function AIMetricsPage() {
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 217, 255, 0.1)" />
-                                <XAxis dataKey="time" stroke="#71788a" tick={{ fill: '#71788a', fontSize: 10 }} />
-                                <YAxis stroke="#71788a" tick={{ fill: '#71788a', fontSize: 10 }} domain={[-1, 0.5]} />
+                                <XAxis dataKey="time" stroke="var(--muted-foreground)" tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} />
+                                <YAxis stroke="var(--muted-foreground)" tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} domain={[-1, 0.5]} />
                                 <Tooltip contentStyle={tooltipStyle} />
                                 <Area type="monotone" dataKey="score" stroke="#00d9ff" strokeWidth={2} fill="url(#anomalyGradient)" />
                             </AreaChart>
@@ -339,7 +346,7 @@ export function AIMetricsPage() {
                                         cx="50%" cy="50%"
                                         outerRadius={80}
                                         strokeWidth={2}
-                                        stroke="rgba(20, 24, 40, 0.8)"
+                                        stroke="var(--glass-bg)"
                                     >
                                         {threatDistribution.map((_entry, index) => (
                                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -378,8 +385,8 @@ export function AIMetricsPage() {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={llmLatencyHistory}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 217, 255, 0.1)" />
-                                <XAxis dataKey="time" stroke="#71788a" tick={{ fill: '#71788a', fontSize: 10 }} />
-                                <YAxis stroke="#71788a" tick={{ fill: '#71788a', fontSize: 10 }} unit="ms" />
+                                <XAxis dataKey="time" stroke="var(--muted-foreground)" tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} />
+                                <YAxis stroke="var(--muted-foreground)" tick={{ fill: 'var(--muted-foreground)', fontSize: 10 }} unit="ms" />
                                 <Tooltip contentStyle={tooltipStyle} />
                                 <Bar dataKey="latency" fill="#7c3aed" radius={[4, 4, 0, 0]} opacity={0.8} />
                             </BarChart>
@@ -466,5 +473,6 @@ export function AIMetricsPage() {
                 </div>
             </div>
         </div>
+        </motion.div>
     );
 }

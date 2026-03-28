@@ -16,6 +16,7 @@ import {
     Laptop, Database, Globe, Radio, Monitor
 } from 'lucide-react';
 import { BACKEND_URL } from '@/lib/api';
+import { NodeDetailCard, type NodeDetail } from './ui/NodeDetailCard';
 
 // ─── Types ──────────────────────────────────────────────────────
 interface TopologyData {
@@ -214,7 +215,7 @@ function buildReactFlowElements(data: TopologyData): { nodes: Node[]; edges: Edg
 export function TopologyPage() {
     const [topoData, setTopoData] = useState<TopologyData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
+    const [selectedNode, setSelectedNode] = useState<NodeDetail | null>(null);
 
     const fetchTopology = useCallback(async () => {
         try {
@@ -327,7 +328,14 @@ export function TopologyPage() {
                         fitView
                         minZoom={0.3}
                         maxZoom={2}
-                        onNodeClick={(_event, node) => setSelectedNode(node.data as unknown as TopologyNode)}
+                        onNodeClick={(_event, node) => {
+                            const d = node.data as unknown as TopologyNode;
+                            setSelectedNode({
+                                id: d.id, label: d.label, ip: d.ip, type: d.type,
+                                color: NODE_STYLE[d.type]?.border ?? '#6b7280',
+                                status: d.status, connections: d.connections, traffic: d.traffic,
+                            });
+                        }}
                         proOptions={{ hideAttribution: true }}
                     >
                         <Background color="#1e293b" gap={25} size={1} />
@@ -373,42 +381,7 @@ export function TopologyPage() {
 
                     {/* Selected Node Detail */}
                     {selectedNode && (
-                        <div className="rounded-lg border bg-card/50 p-4 backdrop-blur-sm" style={{ borderColor: NODE_STYLE[selectedNode.type]?.border || '#1e293b' }}>
-                            <div className="flex items-center gap-2 mb-3">
-                                {getNodeIcon(selectedNode.type, NODE_STYLE[selectedNode.type]?.icon || '#94a3b8')}
-                                <h3 className="text-sm font-medium">{selectedNode.label}</h3>
-                            </div>
-                            <div className="space-y-1.5 text-xs">
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">IP</span>
-                                    <span className="font-mono">{selectedNode.ip}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Status</span>
-                                    <span className="capitalize" style={{ color: STATUS_COLORS[selectedNode.status] }}>{selectedNode.status}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Connections</span>
-                                    <span className="font-medium">{selectedNode.connections}</span>
-                                </div>
-                                {selectedNode.traffic !== undefined && (
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Traffic</span>
-                                        <span className="font-medium">{selectedNode.traffic.toLocaleString()} pkts</span>
-                                    </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Type</span>
-                                    <span className="capitalize">{selectedNode.type}</span>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => setSelectedNode(null)}
-                                className="mt-3 w-full rounded text-xs text-muted-foreground hover:text-foreground py-1 border border-border hover:bg-muted transition-colors"
-                            >
-                                Dismiss
-                            </button>
-                        </div>
+                        <NodeDetailCard node={selectedNode} onDismiss={() => setSelectedNode(null)} />
                     )}
                 </div>
             </div>

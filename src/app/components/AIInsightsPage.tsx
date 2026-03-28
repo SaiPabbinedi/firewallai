@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Brain, TrendingUp, AlertTriangle, CheckCircle2, Info, Loader2, RefreshCw, Zap } from 'lucide-react';
 
 // API configuration
@@ -289,7 +290,7 @@ export function AIInsightsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-6">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
@@ -345,9 +346,13 @@ export function AIInsightsPage() {
                 key={index}
                 className={`rounded-lg border p-5 backdrop-blur-sm ${riskColors[threat.risk]}`}
                 style={{
-                  background: 'rgba(20, 24, 40, 0.5)',
+                  background: 'var(--glass-bg)',
                   backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 24px var(--glass-shadow)',
+                  borderColor: 'var(--glass-border)',
                 }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -392,9 +397,13 @@ export function AIInsightsPage() {
                   key={index}
                   className={`rounded-lg border p-5 backdrop-blur-sm ${severityColors[anomaly.severity]}`}
                   style={{
-                    background: 'rgba(20, 24, 40, 0.5)',
+                    background: 'var(--glass-bg)',
                     backdropFilter: 'blur(10px)',
+                    boxShadow: '0 4px 24px var(--glass-shadow)',
+                    borderColor: 'var(--glass-border)',
                   }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
                 >
                   <div className="flex items-start gap-3">
                     <div className="rounded-lg bg-primary/10 p-2">
@@ -427,11 +436,15 @@ export function AIInsightsPage() {
             {explainability.map((item, index) => (
               <div
                 key={index}
-                className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm"
+                className="rounded-lg border p-6 backdrop-blur-sm"
                 style={{
-                  background: 'rgba(20, 24, 40, 0.5)',
+                  background: 'var(--glass-bg)',
                   backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 24px var(--glass-shadow)',
+                  borderColor: 'var(--glass-border)',
                 }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
               >
                 <div className="flex items-start gap-4">
                   <div className="rounded-lg bg-primary/10 p-3">
@@ -493,6 +506,6 @@ export function AIInsightsPage() {
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }

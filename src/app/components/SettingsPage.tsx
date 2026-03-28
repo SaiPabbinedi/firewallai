@@ -209,8 +209,8 @@ export function SettingsPage() {
   };
 
   const glassStyle = {
-    background: 'rgba(20, 24, 40, 0.5)',
-    backdropFilter: 'blur(10px)',
+    background: 'var(--glass-bg)',
+    backdropFilter: 'blur(16px)',
   };
 
   return (

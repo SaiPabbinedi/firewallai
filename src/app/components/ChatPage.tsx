@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 import {
   Bot, Send, Loader2, Trash2, Shield, Terminal,
-  AlertTriangle, BookOpen, Sparkles, Copy, Check
+  AlertTriangle, BookOpen, Sparkles, Copy, Check, Maximize2, Minimize2
 } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://192.168.1.101:3001';
@@ -27,6 +29,7 @@ export function ChatPage({ initialContext, initialQuestion }: ChatPageProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `chat-${Date.now()}`);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const hasProcessedInitial = useRef(false);
@@ -144,41 +147,60 @@ export function ChatPage({ initialContext, initialQuestion }: ChatPageProps) {
     'How to set up proper firewall segmentation with VLANs on pfSense',
   ];
 
-  const glassStyle = { background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' };
+  const glassStyle = { background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' };
 
-  return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/30">
-            <Bot className="h-6 w-6 text-primary" />
+  // Create the chat content JSX
+  const chatContent = (
+    <motion.div
+      className={`flex flex-col gap-4 overflow-hidden ${
+        isExpanded ? 'h-screen w-screen' : 'w-full rounded-lg border border-border'
+      }`}
+      style={{
+        height: isExpanded ? '100vh' : '90vh',
+        background: isExpanded ? 'var(--background)' : 'var(--glass-bg)',
+        backdropFilter: isExpanded ? 'none' : 'blur(16px)',
+      }}
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+    >
+
+        {/* Header */}
+        <div className="flex items-center justify-between shrink-0 pb-2 border-b border-border/50 px-4 pt-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/30">
+              <Bot className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold">Security Expert Chat</h2>
+              <p className="text-xs md:text-sm text-muted-foreground">
+                Network &amp; cybersecurity assistant powered by AI
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold">Security Expert Chat</h2>
-            <p className="text-sm text-muted-foreground">
-              Network &amp; cybersecurity assistant powered by AI
-            </p>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-lg px-3 py-1.5">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              AI Online
+            </div>
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted transition-colors"
+              title={isExpanded ? 'Collapse' : 'Expand'}
+            >
+              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={clearChat}
+              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted transition-colors"
+            >
+              <Trash2 className="h-4 w-4" /> Clear
+            </button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground border border-border rounded-lg px-3 py-1.5">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            AI Online
-          </div>
-          <button
-            onClick={clearChat}
-            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm hover:bg-muted transition-colors"
-          >
-            <Trash2 className="h-4 w-4" /> Clear
-          </button>
-        </div>
-      </div>
 
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto rounded-lg border border-border p-4 space-y-4 min-h-0" style={glassStyle}>
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
+        {/* Messages area - flex-1 to fill available space with internal scrolling */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ ...glassStyle, border: 'none', background: 'transparent' }}>
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full text-center">
             <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 mb-6">
               <Shield className="h-12 w-12 text-primary/40" />
             </div>
@@ -201,8 +223,8 @@ export function ChatPage({ initialContext, initialQuestion }: ChatPageProps) {
           </div>
         )}
 
-        {messages.map(msg => (
-          <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          {messages.map(msg => (
+            <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {msg.role !== 'user' && (
               <div className={`shrink-0 h-8 w-8 rounded-lg flex items-center justify-center ${msg.role === 'system' ? 'bg-yellow-500/10 border border-yellow-500/30' : 'bg-primary/10 border border-primary/30'}`}>
                 {msg.role === 'system' ? <AlertTriangle className="h-4 w-4 text-yellow-400" /> : <Bot className="h-4 w-4 text-primary" />}
@@ -255,53 +277,81 @@ export function ChatPage({ initialContext, initialQuestion }: ChatPageProps) {
               </div>
             </div>
           </div>
-        ))}
+          ))}
 
-        {isLoading && (
-          <div className="flex gap-3">
-            <div className="shrink-0 h-8 w-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
-              <Bot className="h-4 w-4 text-primary" />
-            </div>
-            <div className="rounded-lg bg-card border border-border px-4 py-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Analyzing...
+          {isLoading && (
+            <div className="flex gap-3">
+              <div className="shrink-0 h-8 w-8 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
+                <Bot className="h-4 w-4 text-primary" />
+              </div>
+              <div className="rounded-lg bg-card border border-border px-4 py-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Analyzing...
+                </div>
               </div>
             </div>
-          </div>
-        )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Input area */}
-      <div className="mt-4 shrink-0">
-        <div className="flex gap-3">
-          <div className="flex-1 relative">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask about network security, firewall rules, vulnerabilities..."
-              rows={1}
-              className="w-full rounded-lg border border-border bg-card px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              style={{ minHeight: '44px', maxHeight: '120px' }}
-            />
-            <button
-              onClick={() => sendMessage()}
-              disabled={!input.trim() || isLoading}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-30"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
+          )}
+          <div ref={messagesEndRef} />
         </div>
-        <p className="mt-2 text-xs text-muted-foreground text-center">
-          <Terminal className="h-3 w-3 inline mr-1" />
-          Shift+Enter for new line · AI may produce inaccurate information
-        </p>
-      </div>
-    </div>
+
+        {/* Input area - shrink-0 to maintain fixed height */}
+        <div className="shrink-0 px-4 pb-4">
+          <div className="flex gap-3">
+            <div className="flex-1 relative">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask about network security, firewall rules, vulnerabilities..."
+                rows={1}
+                className="w-full rounded-lg border border-border bg-card px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                style={{ minHeight: '44px', maxHeight: '120px' }}
+              />
+              <button
+                onClick={() => sendMessage()}
+                disabled={!input.trim() || isLoading}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors disabled:opacity-30"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground text-center hidden md:block">
+            <Terminal className="h-3 w-3 inline mr-1" />
+            Shift+Enter for new line · AI may produce inaccurate information
+          </p>
+        </div>
+      </motion.div>
+  );
+
+  // If expanded, render as portal to document body
+  if (isExpanded) {
+    return createPortal(
+      <motion.div
+        className="fixed inset-0 z-[9999] flex flex-col gap-4 pointer-events-auto p-0"
+        transition={{ duration: 0.3, ease: 'easeInOut' }}
+        style={{
+          background: 'var(--background)',
+        }}
+      >
+        {chatContent}
+      </motion.div>,
+      document.body
+    );
+  }
+
+  // Otherwise render inline
+  return (
+    <motion.div
+      className="flex flex-col gap-4 pointer-events-auto relative h-full w-full"
+      transition={{ duration: 0.3, ease: 'easeInOut' }}
+      style={{
+        background: 'transparent',
+      }}
+    >
+      {chatContent}
+    </motion.div>
   );
 }

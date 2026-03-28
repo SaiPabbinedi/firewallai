@@ -121,7 +121,7 @@ export function TerminalPage() {
   }, []);
 
   const glassStyle = {
-    background: 'rgba(20, 24, 40, 0.5)',
+    background: 'var(--glass-bg)',
     backdropFilter: 'blur(10px)',
   };
 

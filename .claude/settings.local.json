@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /c/Users/saiku/Desktop/FirewallAI/firewallai/src/app/components/*.tsx)",
+      "Read(//c/Users/saiku/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/**)",
+      "Read(//c/Users/saiku/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/**)",
+      "Bash(bash \"C:/Users/saiku/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/scripts/start-server.sh\" --project-dir \"c:/Users/saiku/Desktop/FirewallAI/firewallai\")",
+      "Bash(bash \"C:/Users/saiku/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.5/skills/brainstorming/scripts/start-server.sh\" --project-dir \"c:/Users/saiku/Desktop/FirewallAI/firewallai\")",
+      "Bash(npm run:*)"
+    ]
+  }
+}

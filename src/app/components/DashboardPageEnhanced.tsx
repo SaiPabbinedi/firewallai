@@ -8,6 +8,11 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { EnhancedGlassCard } from './ui/EnhancedGlassCard';
+import { LiveAttackPulse } from './ui/LiveAttackPulse';
+import { SecurityHealthScore } from './ui/SecurityHealthScore';
+import { EmergencyLockdown } from './ui/EmergencyLockdown';
+import { NetworkPulse } from './ui/NetworkPulse';
 
 interface BlockedDomain {
   domain: string;
@@ -34,46 +39,6 @@ const card = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.24, ease: 'easeOut' as const } },
 };
 
-// ── Shared glassmorphism card style ───────────────────────────────
-const glassStyle: React.CSSProperties = {
-  background: 'var(--glass-bg)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid var(--glass-border)',
-  boxShadow: '0 4px 24px var(--glass-shadow)',
-};
-
-const glassHoverStyle: React.CSSProperties = {
-  borderColor: 'var(--glass-hover-border)',
-};
-
-function GlassCard({
-  className = '',
-  style = {},
-  children,
-  layoutId,
-}: {
-  className?: string;
-  style?: React.CSSProperties;
-  children: React.ReactNode;
-  layoutId?: string;
-}) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <motion.div
-      layoutId={layoutId}
-      variants={card}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`rounded-xl p-5 transition-shadow ${className}`}
-      style={{ ...glassStyle, ...(hovered ? glassHoverStyle : {}), ...style }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
 // ── Severity config ───────────────────────────────────────────────
 const severityConfig = {
   high:   { bg: 'rgba(255,59,87,0.08)',    border: 'rgba(255,59,87,0.25)',    dot: '#ff3b57',  label: 'HIGH'   },
@@ -81,7 +46,7 @@ const severityConfig = {
   low:    { bg: 'rgba(0,217,255,0.06)',    border: 'rgba(0,217,255,0.2)',     dot: '#00d9ff',  label: 'LOW'    },
 };
 
-export function DashboardPage() {
+export function DashboardPageEnhanced() {
   const [activeThreats, setActiveThreats] = useState(12);
   const [logsPerSecond, setLogsPerSecond] = useState(2847);
   const [ruleCount] = useState(342);
@@ -186,6 +151,7 @@ export function DashboardPage() {
       accent: '#ff3b57',
       accentBg: 'rgba(255,59,87,0.1)',
       accentBorder: 'rgba(255,59,87,0.25)',
+      variant: 'danger' as const,
     },
     {
       title: 'Logs / Second',
@@ -195,6 +161,7 @@ export function DashboardPage() {
       accent: 'var(--primary)',
       accentBg: 'rgba(0,217,255,0.08)',
       accentBorder: 'rgba(0,217,255,0.25)',
+      variant: 'accent' as const,
     },
     {
       title: 'Firewall Rules',
@@ -204,6 +171,7 @@ export function DashboardPage() {
       accent: '#10b981',
       accentBg: 'rgba(16,185,129,0.08)',
       accentBorder: 'rgba(16,185,129,0.25)',
+      variant: 'success' as const,
     },
     {
       title: 'Risk Level',
@@ -213,6 +181,7 @@ export function DashboardPage() {
       accent: '#fbbf24',
       accentBg: 'rgba(251,191,36,0.08)',
       accentBorder: 'rgba(251,191,36,0.25)',
+      variant: 'default' as const,
     },
   ];
 
@@ -239,7 +208,7 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Bento Grid ─────────────────────────────────────────── */}
+      {/* ── Enhanced Bento Grid ─────────────────────────────────────────── */}
       <motion.div
         variants={container}
         initial="hidden"
@@ -247,15 +216,17 @@ export function DashboardPage() {
         className="grid gap-4"
         style={{
           gridTemplateColumns: 'repeat(4, 1fr)',
-          gridTemplateRows: 'auto auto auto',
+          gridTemplateRows: 'auto auto auto auto',
         }}
       >
-        {/* Row 1: 4 stat cards */}
+        {/* Row 1: 4 stat cards with EnhancedGlassCard */}
         {statCards.map((sc, i) => {
           const Icon = sc.icon;
           return (
-            <GlassCard
+            <EnhancedGlassCard
               key={i}
+              variant={sc.variant}
+              glow={true}
               style={{ gridColumn: i + 1, gridRow: 1 }}
             >
               <div className="flex items-start justify-between">
@@ -271,55 +242,22 @@ export function DashboardPage() {
                   <Icon className="h-4 w-4" style={{ color: sc.accent }} />
                 </div>
               </div>
-            </GlassCard>
+            </EnhancedGlassCard>
           );
         })}
 
-        {/* Row 2–3, Col 4: AI Insights (tall card) */}
-        <GlassCard
+        {/* Row 2, Col 4: Security Health Score (tall card) */}
+        <EnhancedGlassCard
+          variant="accent"
+          glow={true}
           style={{ gridColumn: 4, gridRow: '2 / 4' }}
           className="flex flex-col"
         >
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-foreground">AI Insights</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">ML-powered threat detection</p>
-          </div>
-          <div className="space-y-2.5 flex-1">
-            {aiInsights.map((insight, i) => {
-              const cfg = severityConfig[insight.severity as keyof typeof severityConfig];
-              return (
-                <div
-                  key={i}
-                  className="rounded-lg p-3 transition-all"
-                  style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <span
-                      className="mt-1 h-2 w-2 rounded-full shrink-0"
-                      style={{ background: cfg.dot, boxShadow: `0 0 6px ${cfg.dot}` }}
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-xs font-semibold text-foreground leading-snug">{insight.title}</p>
-                        <span
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{ background: cfg.bg, color: cfg.dot, border: `1px solid ${cfg.border}` }}
-                        >
-                          {cfg.label}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground leading-snug">{insight.description}</p>
-                      <p className="mt-1.5 text-[10px] text-muted-foreground/60">{insight.time}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </GlassCard>
+          <SecurityHealthScore />
+        </EnhancedGlassCard>
 
         {/* Row 2, Col 1–3: Traffic Chart */}
-        <GlassCard style={{ gridColumn: '1 / 4', gridRow: 2 }}>
+        <EnhancedGlassCard variant="default" style={{ gridColumn: '1 / 4', gridRow: 2 }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Network Traffic</h3>
@@ -359,10 +297,15 @@ export function DashboardPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </GlassCard>
+        </EnhancedGlassCard>
 
-        {/* Row 3, Col 1–2: Blocked Domains */}
-        <GlassCard style={{ gridColumn: '1 / 3', gridRow: 3 }}>
+        {/* Row 3, Col 1: Live Attack Pulse */}
+        <EnhancedGlassCard variant="danger" glow={true} style={{ gridColumn: 1, gridRow: 3 }}>
+          <LiveAttackPulse />
+        </EnhancedGlassCard>
+
+        {/* Row 3, Col 2: Blocked Domains */}
+        <EnhancedGlassCard variant="default" style={{ gridColumn: 2, gridRow: 3 }}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <div
@@ -412,10 +355,10 @@ export function DashboardPage() {
               ))}
             </div>
           )}
-        </GlassCard>
+        </EnhancedGlassCard>
 
         {/* Row 3, Col 3: Recent Block Events */}
-        <GlassCard style={{ gridColumn: 3, gridRow: 3 }}>
+        <EnhancedGlassCard variant="default" style={{ gridColumn: 3, gridRow: 3 }}>
           <div className="flex items-center gap-2.5 mb-4">
             <div
               className="p-2 rounded-lg"
@@ -459,7 +402,17 @@ export function DashboardPage() {
               ))
             )}
           </div>
-        </GlassCard>
+        </EnhancedGlassCard>
+
+        {/* Row 4, Col 1–2: Network Topology Pulse */}
+        <EnhancedGlassCard variant="accent" style={{ gridColumn: '1 / 3', gridRow: 4 }}>
+          <NetworkPulse />
+        </EnhancedGlassCard>
+
+        {/* Row 4, Col 3–4: Emergency Lockdown */}
+        <EnhancedGlassCard variant="danger" glow={true} style={{ gridColumn: '3 / 5', gridRow: 4 }}>
+          <EmergencyLockdown />
+        </EnhancedGlassCard>
       </motion.div>
     </div>
   );

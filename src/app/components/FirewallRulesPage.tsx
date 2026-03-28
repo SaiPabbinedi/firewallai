@@ -228,7 +228,7 @@ export function FirewallRulesPage() {
       )}
 
       {/* AI Rule Generator */}
-      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
         <div className="border-b border-border px-4 py-3 bg-muted/30">
           <h3 className="font-medium">🤖 AI Rule Generator</h3>
           <p className="text-xs text-muted-foreground mt-1">Use natural language to create firewall rules with AI assistance</p>
@@ -239,7 +239,7 @@ export function FirewallRulesPage() {
       </div>
 
       {/* Active Rules */}
-      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
         <div className="border-b border-border px-4 py-3 bg-muted/30">
           <h3 className="font-medium">Active Rules ({rules.length})</h3>
         </div>
@@ -311,7 +311,7 @@ export function FirewallRulesPage() {
       </div>
 
       {/* Recent Audit Log */}
-      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+      <div className="rounded-lg border border-border overflow-hidden" style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(16px)' }}>
         <div className="border-b border-border px-4 py-3 bg-muted/30">
           <h3 className="font-medium">Recent Activity</h3>
         </div>
@@ -347,7 +347,7 @@ export function FirewallRulesPage() {
       {/* Add Rule Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="rounded-lg border border-border bg-card p-6 w-full max-w-md" style={{ background: 'rgba(20, 24, 40, 0.95)' }}>
+          <div className="rounded-lg border border-border bg-card p-6 w-full max-w-md" style={{ background: 'var(--popover)' }}>
             <h3 className="text-lg font-bold mb-4">Add Firewall Rule</h3>
 
             <div className="space-y-4">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import {
   BarChart3, Activity, Shield, Globe, Clock,
   TrendingUp, RefreshCw, Loader2,
@@ -145,7 +146,7 @@ export function AnalyticsPage() {
   })) || [];
 
   return (
-    <div className="space-y-6">
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -175,7 +176,17 @@ export function AnalyticsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Total Events</p>
@@ -191,7 +202,17 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Events/Second</p>
@@ -207,7 +228,17 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Blocked</p>
@@ -223,7 +254,17 @@ export function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--glass-hover-border)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--glass-border)')}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground">Unique Sources</p>
@@ -243,7 +284,15 @@ export function AnalyticsPage() {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-3 gap-4">
         {/* Traffic Over Time */}
-        <div className="col-span-2 rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="col-span-2 rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <h3 className="text-sm font-medium mb-4">Traffic Over Time</h3>
           <ResponsiveContainer width="100%" height={250}>
             <AreaChart data={timeSeriesData}>
@@ -258,10 +307,15 @@ export function AnalyticsPage() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis dataKey="time" stroke="#9ca3af" fontSize={12} />
-              <YAxis stroke="#9ca3af" fontSize={12} />
+              <XAxis dataKey="time" stroke="var(--muted-foreground)" fontSize={12} />
+              <YAxis stroke="var(--muted-foreground)" fontSize={12} />
               <Tooltip
-                contentStyle={{ background: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={{
+                  background: 'var(--glass-bg)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '8px',
+                  backdropFilter: 'blur(12px)',
+                }}
                 labelStyle={{ color: '#fff' }}
               />
               <Legend />
@@ -272,7 +326,15 @@ export function AnalyticsPage() {
         </div>
 
         {/* Action Distribution */}
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <h3 className="text-sm font-medium mb-4">Action Distribution</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -290,7 +352,12 @@ export function AnalyticsPage() {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ background: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={{
+                  background: 'var(--glass-bg)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '8px',
+                  backdropFilter: 'blur(12px)',
+                }}
               />
               <Legend />
             </PieChart>
@@ -301,15 +368,28 @@ export function AnalyticsPage() {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-3 gap-4">
         {/* Top Sources */}
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <h3 className="text-sm font-medium mb-4">Top Source IPs</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={stats?.topSources.slice(0, 5)} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-              <XAxis type="number" stroke="#9ca3af" fontSize={12} />
-              <YAxis dataKey="ip" type="category" stroke="#9ca3af" fontSize={11} width={100} />
+              <XAxis type="number" stroke="var(--muted-foreground)" fontSize={12} />
+              <YAxis dataKey="ip" type="category" stroke="var(--muted-foreground)" fontSize={11} width={100} />
               <Tooltip
-                contentStyle={{ background: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={{
+                  background: 'var(--glass-bg)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '8px',
+                  backdropFilter: 'blur(12px)',
+                }}
               />
               <Bar dataKey="count" fill="#6366f1" radius={[0, 4, 4, 0]} />
             </BarChart>
@@ -317,7 +397,15 @@ export function AnalyticsPage() {
         </div>
 
         {/* Protocol Distribution */}
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <h3 className="text-sm font-medium mb-4">Protocol Distribution</h3>
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -335,7 +423,12 @@ export function AnalyticsPage() {
                 ))}
               </Pie>
               <Tooltip
-                contentStyle={{ background: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }}
+                contentStyle={{
+                  background: 'var(--glass-bg)',
+                  border: '1px solid var(--glass-border)',
+                  borderRadius: '8px',
+                  backdropFilter: 'blur(12px)',
+                }}
               />
               <Legend />
             </PieChart>
@@ -343,7 +436,15 @@ export function AnalyticsPage() {
         </div>
 
         {/* Quick Stats */}
-        <div className="rounded-lg border border-border bg-card p-5" style={{ background: 'rgba(20, 24, 40, 0.5)', backdropFilter: 'blur(10px)' }}>
+        <div
+          className="rounded-lg border p-5"
+          style={{
+            background: 'var(--glass-bg)',
+            borderColor: 'var(--glass-border)',
+            boxShadow: '0 4px 24px var(--glass-shadow)',
+            backdropFilter: 'blur(10px)',
+          }}
+        >
           <h3 className="text-sm font-medium mb-4">System Status</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -379,6 +480,6 @@ export function AnalyticsPage() {
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

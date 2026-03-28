@@ -105,3 +105,7 @@ docker/grafana/provisioning/datasources/secrets/
 # Local development scripts output
 *.bak
 *.orig
+.superpowers/*
+
+ENHANCEMENT_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
