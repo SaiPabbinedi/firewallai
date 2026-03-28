@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Database, Cpu, Zap, Settings as SettingsIcon, Globe, Server, Shield, BookOpen, AlertTriangle, Save, RefreshCw, ExternalLink, Copy, Eye, EyeOff, Key } from 'lucide-react';
+import { CheckCircle, XCircle, Database, Cpu, Zap, Settings as SettingsIcon, Globe, Server, Shield, BookOpen, AlertTriangle, Save, RefreshCw, ExternalLink, Copy, Eye, EyeOff, Key, Layers, MousePointer2, Smartphone, Sparkles } from 'lucide-react';
 
 interface ConnectionConfig {
   pfsenseUrl: string;
@@ -278,12 +278,12 @@ export function SettingsPage() {
           <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className={`rounded-lg p-2 ${connectionStatus === 'connected' ? 'bg-emerald-500/10' : 'bg-destructive/10'}`}>
-                  <Shield className={`h-5 w-5 ${connectionStatus === 'connected' ? 'text-emerald-500' : 'text-destructive'}`} />
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold">pfSense Firewall</h3>
-                  <p className="text-xs text-muted-foreground">WebGUI & API Connection</p>
+                  <p className="text-xs text-muted-foreground">Main gateway connection</p>
                 </div>
               </div>
               <StatusBadge status={connectionStatus} />
@@ -292,319 +292,171 @@ export function SettingsPage() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Firewall IP/Hostname</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">IP Address / Hostname</label>
                   <input
                     type="text"
                     value={config.pfsenseUrl}
                     onChange={(e) => handleConfigChange('pfsenseUrl', e.target.value)}
-                    placeholder="192.168.1.1"
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Port</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">Web Port</label>
                   <input
                     type="text"
                     value={config.pfsensePort}
                     onChange={(e) => handleConfigChange('pfsensePort', e.target.value)}
-                    placeholder="443"
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
 
-              {/* Credentials Section */}
-              <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Key className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">Login Credentials</span>
-                </div>
-
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Username</label>
-                  <div className="flex gap-2">
+                  <label className="text-xs text-muted-foreground mb-1 block">Username</label>
+                  <input
+                    type="text"
+                    value={config.pfsenseUsername}
+                    onChange={(e) => handleConfigChange('pfsenseUsername', e.target.value)}
+                    className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Password</label>
+                  <div className="relative">
                     <input
-                      type="text"
-                      value={config.pfsenseUsername}
-                      onChange={(e) => handleConfigChange('pfsenseUsername', e.target.value)}
-                      placeholder="admin"
-                      className="flex-1 rounded-lg border border-border bg-input-background px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                      type={showPfsensePassword ? 'text' : 'password'}
+                      value={config.pfsensePassword}
+                      onChange={(e) => handleConfigChange('pfsensePassword', e.target.value)}
+                      className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary pr-10"
                     />
                     <button
-                      onClick={() => copyToClipboard(config.pfsenseUsername, 'Username')}
-                      className="px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
-                      title="Copy username"
+                      onClick={() => setShowPfsensePassword(!showPfsensePassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
-                      <Copy className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Password</label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                      <input
-                        type={showPfsensePassword ? 'text' : 'password'}
-                        value={config.pfsensePassword}
-                        onChange={(e) => handleConfigChange('pfsensePassword', e.target.value)}
-                        placeholder="pfsense"
-                        className="w-full rounded-lg border border-border bg-input-background px-4 py-2 pr-10 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                      />
-                      <button
-                        onClick={() => setShowPfsensePassword(!showPfsensePassword)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded transition-colors"
-                      >
-                        {showPfsensePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => copyToClipboard(config.pfsensePassword, 'Password')}
-                      className="px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
-                      title="Copy password"
-                    >
-                      <Copy className="h-4 w-4" />
+                      {showPfsensePassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
               </div>
 
               <div>
-                <label className="text-sm text-muted-foreground mb-2 block">API Key (Optional - for direct API access)</label>
+                <label className="text-xs text-muted-foreground mb-1 block">API Key (Optional)</label>
                 <input
                   type="password"
                   value={config.pfsenseApiKey}
                   onChange={(e) => handleConfigChange('pfsenseApiKey', e.target.value)}
-                  placeholder="Enter pfSense API key..."
-                  className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="For pfSense-API package"
+                  className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="pt-2 flex gap-2">
                 <button
                   onClick={testPfSenseConnection}
-                  disabled={connectionStatus === 'testing'}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                  className="flex-1 py-2 rounded-lg border border-border bg-muted/50 text-xs font-medium hover:bg-muted transition-colors"
                 >
-                  <RefreshCw className={`h-4 w-4 ${connectionStatus === 'testing' ? 'animate-spin' : ''}`} />
                   Test Connection
                 </button>
                 <button
                   onClick={openPfSenseWebGUI}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-primary bg-primary/10 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors"
+                  className="flex-1 py-2 rounded-lg border border-border bg-muted/50 text-xs font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2"
                 >
-                  <ExternalLink className="h-4 w-4" />
+                  <ExternalLink className="h-3 w-3" />
                   Open WebGUI
                 </button>
               </div>
-
-              <p className="text-xs text-muted-foreground">
-                💡 Tip: Click "Open WebGUI" then use the copy buttons above to paste credentials
-              </p>
             </div>
           </div>
 
-          {/* Backend Server Connection */}
-          <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`rounded-lg p-2 ${backendStatus === 'connected' ? 'bg-emerald-500/10' : 'bg-destructive/10'}`}>
-                  <Server className={`h-5 w-5 ${backendStatus === 'connected' ? 'text-emerald-500' : 'text-destructive'}`} />
+          {/* Backend & Grafana */}
+          <div className="space-y-6">
+            <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-orange-500/10 p-2">
+                    <Globe className="h-5 w-5 text-orange-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Grafana Dashboard</h3>
+                    <p className="text-xs text-muted-foreground">Metrics & visualization</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-semibold">Backend Server</h3>
-                  <p className="text-xs text-muted-foreground">Ubuntu VM - Node.js API</p>
+                <StatusBadge status={grafanaStatus} />
+              </div>
+
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <label className="text-xs text-muted-foreground mb-1 block">Hostname / IP</label>
+                    <input
+                      type="text"
+                      value={config.grafanaUrl}
+                      onChange={(e) => handleConfigChange('grafanaUrl', e.target.value)}
+                      className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Port</label>
+                    <input
+                      type="text"
+                      value={config.grafanaPort}
+                      onChange={(e) => handleConfigChange('grafanaPort', e.target.value)}
+                      className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    onClick={testGrafanaConnection}
+                    className="flex-1 py-2 rounded-lg border border-border bg-muted/50 text-xs font-medium hover:bg-muted transition-colors"
+                  >
+                    Test Connection
+                  </button>
+                  <button
+                    onClick={openGrafana}
+                    className="flex-1 py-2 rounded-lg border border-border bg-muted/50 text-xs font-medium hover:bg-muted transition-colors flex items-center justify-center gap-2"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Open Grafana
+                  </button>
                 </div>
               </div>
-              <StatusBadge status={backendStatus} />
             </div>
 
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Server IP/Hostname</label>
+            <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-lg bg-emerald-500/10 p-2">
+                    <Server className="h-5 w-5 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Backend API</h3>
+                    <p className="text-xs text-muted-foreground">Node.js processing server</p>
+                  </div>
+                </div>
+                <StatusBadge status={backendStatus} />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="col-span-2">
+                  <label className="text-xs text-muted-foreground mb-1 block">Hostname / IP</label>
                   <input
                     type="text"
                     value={config.backendUrl}
                     onChange={(e) => handleConfigChange('backendUrl', e.target.value)}
-                    placeholder="192.168.1.101"
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Port</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">Port</label>
                   <input
                     type="text"
                     value={config.backendPort}
                     onChange={(e) => handleConfigChange('backendPort', e.target.value)}
-                    placeholder="3001"
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full rounded-lg border border-border bg-input-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                   />
-                </div>
-              </div>
-
-              <div className="p-3 rounded-lg border border-border/50 bg-black/20">
-                <p className="text-xs text-muted-foreground">
-                  <strong>Endpoints available:</strong><br />
-                  • <code className="text-primary">/ai.txt</code> - Blocklist domains<br />
-                  • <code className="text-primary">Socket.IO</code> - Terminal & real-time stats
-                </p>
-              </div>
-
-              <button
-                onClick={testBackendConnection}
-                disabled={backendStatus === 'testing'}
-                className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
-              >
-                <RefreshCw className={`h-4 w-4 ${backendStatus === 'testing' ? 'animate-spin' : ''}`} />
-                Test Backend Connection
-              </button>
-            </div>
-          </div>
-
-          {/* Grafana Connection */}
-          <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className={`rounded-lg p-2 ${grafanaStatus === 'connected' ? 'bg-orange-500/10' : 'bg-destructive/10'}`}>
-                  <Globe className={`h-5 w-5 ${grafanaStatus === 'connected' ? 'text-orange-500' : 'text-destructive'}`} />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Grafana Monitoring</h3>
-                  <p className="text-xs text-muted-foreground">Dashboard & Metrics</p>
-                </div>
-              </div>
-              <StatusBadge status={grafanaStatus} />
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Grafana IP/Hostname</label>
-                  <input
-                    type="text"
-                    value={config.grafanaUrl}
-                    onChange={(e) => handleConfigChange('grafanaUrl', e.target.value)}
-                    placeholder="192.168.1.101"
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-2 block">Port</label>
-                  <input
-                    type="text"
-                    value={config.grafanaPort}
-                    onChange={(e) => handleConfigChange('grafanaPort', e.target.value)}
-                    placeholder="3000"
-                    className="w-full rounded-lg border border-border bg-input-background px-4 py-2 text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
-
-              {/* Grafana Credentials */}
-              <div className="p-4 rounded-lg border border-orange-500/30 bg-orange-500/5 space-y-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Key className="h-4 w-4 text-orange-500" />
-                  <span className="text-sm font-medium text-orange-500">Grafana Credentials</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Username</label>
-                    <div className="flex gap-1">
-                      <input
-                        type="text"
-                        value={config.grafanaUsername}
-                        onChange={(e) => handleConfigChange('grafanaUsername', e.target.value)}
-                        className="flex-1 rounded-lg border border-border bg-input-background px-3 py-1.5 text-sm focus:border-primary focus:outline-none"
-                      />
-                      <button
-                        onClick={() => copyToClipboard(config.grafanaUsername, 'Username')}
-                        className="px-2 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">Password</label>
-                    <div className="flex gap-1">
-                      <div className="flex-1 relative">
-                        <input
-                          type={showGrafanaPassword ? 'text' : 'password'}
-                          value={config.grafanaPassword}
-                          onChange={(e) => handleConfigChange('grafanaPassword', e.target.value)}
-                          className="w-full rounded-lg border border-border bg-input-background px-3 py-1.5 pr-8 text-sm focus:border-primary focus:outline-none"
-                        />
-                        <button
-                          onClick={() => setShowGrafanaPassword(!showGrafanaPassword)}
-                          className="absolute right-1.5 top-1/2 -translate-y-1/2"
-                        >
-                          {showGrafanaPassword ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                        </button>
-                      </div>
-                      <button
-                        onClick={() => copyToClipboard(config.grafanaPassword, 'Password')}
-                        className="px-2 py-1.5 rounded-lg border border-border hover:bg-muted transition-colors"
-                      >
-                        <Copy className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  onClick={testGrafanaConnection}
-                  disabled={grafanaStatus === 'testing'}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw className={`h-4 w-4 ${grafanaStatus === 'testing' ? 'animate-spin' : ''}`} />
-                  Test Connection
-                </button>
-                <button
-                  onClick={openGrafana}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-orange-500 bg-orange-500/10 px-4 py-2 text-sm font-medium text-orange-500 hover:bg-orange-500/20 transition-colors"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Open Grafana
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* System Resources */}
-          <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
-            <h3 className="font-semibold mb-4">System Resources</h3>
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">CPU Usage</span>
-                  <span className="text-sm font-medium">23%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: '23%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">Memory Usage</span>
-                  <span className="text-sm font-medium">45%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: '45%' }} />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">Log Storage</span>
-                  <span className="text-sm font-medium">67%</span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-[#fbbf24] transition-all duration-500" style={{ width: '67%' }} />
                 </div>
               </div>
             </div>
@@ -614,91 +466,94 @@ export function SettingsPage() {
 
       {/* AI Settings Tab */}
       {activeTab === 'ai' && (
-        <div className="grid grid-cols-2 gap-6">
-          {/* AI Model Configuration */}
+        <div className="space-y-6">
           <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-6">
               <div className="rounded-lg bg-primary/10 p-2">
                 <Cpu className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <h3 className="font-semibold">AI Model Settings</h3>
-                <p className="text-xs text-muted-foreground">Configure machine learning features</p>
+                <h3 className="font-semibold">AI Engine Configuration</h3>
+                <p className="text-xs text-muted-foreground">Configure threat detection and automated response</p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              {[
-                { label: 'Threat Detection Model', desc: 'Real-time threat analysis using ML', state: threatDetection, setState: setThreatDetection },
-                { label: 'Rule Optimization Engine', desc: 'Automated firewall rule suggestions', state: ruleOptimization, setState: setRuleOptimization },
-                { label: 'Anomaly Detection', desc: 'Behavioral analysis for unusual patterns', state: anomalyDetection, setState: setAnomalyDetection },
-                { label: 'Auto-Response System', desc: 'Automatic threat mitigation (use with caution)', state: autoResponse, setState: setAutoResponse },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center justify-between rounded-lg border border-border bg-muted/10 p-4">
+            <div className="grid grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">{item.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
+                    <p className="text-sm font-medium">Real-time Threat Detection</p>
+                    <p className="text-xs text-muted-foreground">Analyze packets for malicious patterns</p>
                   </div>
-                  <label className="relative inline-flex cursor-pointer items-center">
-                    <input
-                      type="checkbox"
-                      className="peer sr-only"
-                      checked={item.state}
-                      onChange={(e) => item.setState(e.target.checked)}
-                    />
-                    <div className="peer h-6 w-11 rounded-full bg-muted after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-5"></div>
-                  </label>
+                  <button
+                    onClick={() => setThreatDetection(!threatDetection)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${threatDetection ? 'bg-primary' : 'bg-muted'}`}
+                  >
+                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${threatDetection ? 'left-6' : 'left-1'}`} />
+                  </button>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Automation Level */}
-          <div className="rounded-lg border border-border bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Zap className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Automation Level</h3>
-                <p className="text-xs text-muted-foreground">Control AI autonomy</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">Current Level</span>
-                  <span className="text-sm font-medium text-primary">{currentAutomationLevel}</span>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Rule Optimization</p>
+                    <p className="text-xs text-muted-foreground">Suggest improvements to firewall rules</p>
+                  </div>
+                  <button
+                    onClick={() => setRuleOptimization(!ruleOptimization)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${ruleOptimization ? 'bg-primary' : 'bg-muted'}`}
+                  >
+                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${ruleOptimization ? 'left-6' : 'left-1'}`} />
+                  </button>
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="3"
-                  value={automationLevel}
-                  onChange={(e) => setAutomationLevel(Number(e.target.value))}
-                  className="w-full accent-primary"
-                />
-                <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                  <span>Off</span>
-                  <span>Monitor</span>
-                  <span>Suggest</span>
-                  <span>Auto-apply</span>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">Anomaly Detection</p>
+                    <p className="text-xs text-muted-foreground">Identify unusual network behavior</p>
+                  </div>
+                  <button
+                    onClick={() => setAnomalyDetection(!anomalyDetection)}
+                    className={`w-10 h-5 rounded-full transition-colors relative ${anomalyDetection ? 'bg-primary' : 'bg-muted'}`}
+                  >
+                    <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${anomalyDetection ? 'left-6' : 'left-1'}`} />
+                  </button>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-[#fbbf24]/30 bg-[#fbbf24]/5 p-4">
-                <p className="text-xs text-muted-foreground">
-                  {automationLevel === 0 && 'AI features are disabled. Manual operation only.'}
-                  {automationLevel === 1 && 'AI will monitor threats and display insights without taking action.'}
-                  {automationLevel === 2 && 'AI will monitor threats and suggest actions. Manual approval required for rule changes.'}
-                  {automationLevel === 3 && (
-                    <span className="text-[#fbbf24]">
-                      <AlertTriangle className="h-3 w-3 inline mr-1" />
-                      AI will automatically apply rule changes and respond to threats. Use with caution!
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium">Automation Level</p>
+                    <span className="text-xs font-bold text-primary px-2 py-0.5 rounded bg-primary/10 border border-primary/20">
+                      {currentAutomationLevel}
                     </span>
-                  )}
-                </p>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="3"
+                    step="1"
+                    value={automationLevel}
+                    onChange={(e) => setAutomationLevel(parseInt(e.target.value))}
+                    className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                  <div className="flex justify-between mt-2">
+                    <span className="text-[10px] text-muted-foreground">Off</span>
+                    <span className="text-[10px] text-muted-foreground">Monitor</span>
+                    <span className="text-[10px] text-muted-foreground">Suggest</span>
+                    <span className="text-[10px] text-muted-foreground">Auto</span>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Zap className="h-4 w-4 text-primary" />
+                    <p className="text-xs font-bold uppercase tracking-wider text-primary">AI Insight</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Higher automation levels allow the AI to proactively block threats. We recommend starting with <strong>Suggest</strong> mode to review all changes before they are applied to your pfSense firewall.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -764,6 +619,31 @@ export function SettingsPage() {
       {/* Setup Guide Tab */}
       {activeTab === 'setup' && (
         <div className="space-y-6">
+          {/* New Features Quick Start */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 backdrop-blur-sm" style={glassStyle}>
+              <div className="flex items-center gap-2 mb-2">
+                <Layers className="h-5 w-5 text-primary" />
+                <h4 className="font-semibold text-sm">3D Topology Depth</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">Navigate to <strong>Network Flow</strong> and toggle the <strong>3D Depth</strong> view to see your network layers (DMZ, LAN, IoT) stacked in 3D space.</p>
+            </div>
+            <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4 backdrop-blur-sm" style={glassStyle}>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="h-5 w-5 text-cyan-500" />
+                <h4 className="font-semibold text-sm">AI Contextual Actions</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">Look for the <strong>Explain</strong> buttons next to firewall rules or log entries. Clicking them opens the AI chat with full context pre-loaded.</p>
+            </div>
+            <div className="rounded-lg border border-purple-500/30 bg-purple-500/5 p-4 backdrop-blur-sm" style={glassStyle}>
+              <div className="flex items-center gap-2 mb-2">
+                <Smartphone className="h-5 w-5 text-purple-500" />
+                <h4 className="font-semibold text-sm">Mobile Command Center</h4>
+              </div>
+              <p className="text-xs text-muted-foreground">Access the dashboard from your phone to use the <strong>Slide to Confirm</strong> gesture for critical security actions and receive push alerts.</p>
+            </div>
+          </div>
+
           {/* Grafana Complete Setup Guide */}
           <div className="rounded-lg border border-orange-500/30 bg-card/50 p-6 backdrop-blur-sm" style={glassStyle}>
             <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">

@@ -7,9 +7,12 @@ import {
 import {
   ReactFlow, Background, Controls, MiniMap,
   type Node, type Edge, Position, MarkerType,
+  applyNodeChanges, applyEdgeChanges, type NodeChange, type EdgeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { BACKEND_URL } from '@/lib/api';
+import { NetworkTopologyDepth } from './ui/NetworkTopologyDepth';
+import { motion } from 'framer-motion';
 
 // ── Shared node detail type ────────────────────────────────────────────────────
 
@@ -194,198 +197,143 @@ function generateTopoData(): TopoData {
     { source: 'ubuntu',  target: 'grafana',       protocol: 'HTTP',   packets: 320,   status: 'normal',     label: '3000' },
     { source: 'ubuntu',  target: 'ollama',        protocol: 'HTTPS',  packets: 50,    status: 'normal',     label: 'AI' },
     { source: 'kali',    target: 'pfsense',       protocol: 'TCP/UDP',packets: 3200,  status: 'suspicious', label: 'Attack Sim' },
-    { source: 'attacker1',target:'pfsense',       protocol: 'TCP',    packets: 45000, status: 'malicious',  label: 'SSH Brute' },
-    { source: 'attacker2',target:'pfsense',       protocol: 'TCP',    packets: 32000, status: 'malicious',  label: 'Port Scan' },
+    { source: 'attacker1',target:'pfsense',       protocol: 'TCP',    packets: 45000, status: 'malicious',  label: 'DDoS' },
+    { source: 'attacker2',target:'pfsense',       protocol: 'TCP',    packets: 32000, status: 'malicious',  label: 'Brute Force' },
     { source: 'pfsense', target: 'dns',           protocol: 'UDP',    packets: 1500,  status: 'normal',     label: 'DNS' },
-    { source: 'kafka',   target: 'elasticsearch', protocol: 'HTTP',   packets: 2800,  status: 'normal',     label: 'Connector' },
   ];
   return {
     nodes, edges,
-    stats: {
-      totalNodes: nodes.length,
-      totalConnections: edges.length,
-      anomalousConnections: edges.filter(e => e.status !== 'normal').length,
-      activeFlows: edges.reduce((s, e) => s + (e.packets || 0), 0),
-    },
+    stats: { totalNodes: nodes.length, totalConnections: edges.length, anomalousConnections: 3, activeFlows: 12450 },
   };
 }
-
-function buildTopoElements(data: TopoData): { nodes: Node[]; edges: Edge[] } {
-  const cx = 500, cy = 350;
-  const positions: Record<string, { x: number; y: number }> = {
-    pfsense: { x: cx, y: cy }, ubuntu: { x: cx + 250, y: cy - 80 },
-    windows: { x: cx - 250, y: cy - 80 }, elasticsearch: { x: cx + 400, y: cy - 200 },
-    kafka: { x: cx + 400, y: cy + 40 }, grafana: { x: cx + 250, y: cy - 250 },
-    kali: { x: cx - 200, y: cy + 200 }, attacker1: { x: cx - 350, y: cy - 200 },
-    attacker2: { x: cx - 350, y: cy + 80 }, dns: { x: cx + 100, y: cy + 250 },
-    ollama: { x: cx + 350, y: cy + 200 },
-  };
-  const flowNodes: Node[] = data.nodes.map(n => ({
-    id: n.id, type: 'custom',
-    position: positions[n.id] || { x: Math.random() * 800 + 100, y: Math.random() * 500 + 100 },
-    data: n, sourcePosition: Position.Right, targetPosition: Position.Left,
-  }));
-  const flowEdges: Edge[] = data.edges.map((e, i) => ({
-    id: `e-${i}`, source: e.source, target: e.target,
-    animated: e.status !== 'normal',
-    style: { stroke: EDGE_COLORS[e.status] || '#334155', strokeWidth: e.status === 'malicious' ? 2.5 : 1.5 },
-    label: e.label,
-    labelStyle: { fill: '#94a3b8', fontSize: 10 },
-    labelBgStyle: { fill: '#0c1629', fillOpacity: 0.85 },
-    labelBgPadding: [4, 6] as [number, number],
-    markerEnd: { type: MarkerType.ArrowClosed, color: EDGE_COLORS[e.status] || '#334155' },
-  }));
-  return { nodes: flowNodes, edges: flowEdges };
-}
-
-// ── Node detail panel ──────────────────────────────────────────────────────────
-
-const TYPE_ICON: Record<string, React.ElementType> = {
-  wan: Globe, firewall: Shield, switch: Network,
-  server: Server, device: Monitor, client: Laptop,
-  attacker: Skull, database: Database, external: Globe,
-};
-
-function NodeDetailPanel({ node, onClose }: { node: NodeDetail; onClose: () => void }) {
-  const Icon = TYPE_ICON[node.type] ?? Monitor;
-  const statusColor = STATUS_COLORS[node.status] ?? '#6b7280';
-
-  return (
-    <div
-      className="rounded-xl border p-4 space-y-3"
-      style={{ background: 'var(--glass-bg)', borderColor: node.color + '55', backdropFilter: 'blur(12px)' }}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg shrink-0"
-            style={{ background: node.color + '20', border: `1px solid ${node.color}55` }}>
-            <Icon className="h-4.5 w-4.5" style={{ width: 18, height: 18, color: node.color }} aria-hidden="true" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-foreground leading-tight">{node.label}</p>
-            <p className="text-xs text-muted-foreground">{node.role}</p>
-          </div>
-        </div>
-        <button onClick={onClose} aria-label="Close node details"
-          className="rounded p-1 hover:bg-muted transition-colors shrink-0">
-          <X className="h-3.5 w-3.5 text-muted-foreground" />
-        </button>
-      </div>
-
-      {/* Status */}
-      <div className="flex items-center gap-1.5 py-0.5">
-        <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: statusColor }} />
-        <span className="text-xs font-medium capitalize" style={{ color: statusColor }}>{node.status}</span>
-      </div>
-
-      {/* Details */}
-      <div className="space-y-2 text-xs border-t border-border pt-3">
-        {[
-          { label: 'IP Address', value: node.ip, mono: true },
-          { label: 'Node Type',  value: node.type.charAt(0).toUpperCase() + node.type.slice(1) },
-          { label: 'Connections', value: node.connections.toString() },
-          { label: 'Traffic', value: node.traffic.toLocaleString() + ' pkts' },
-        ].map(({ label, value, mono }) => (
-          <div key={label} className="flex items-center justify-between gap-2">
-            <span className="text-muted-foreground">{label}</span>
-            <span className={`text-foreground font-medium ${mono ? 'font-mono' : ''}`}>{value}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Description */}
-      <p className="text-[11px] text-muted-foreground border-t border-border pt-2.5 leading-relaxed">
-        {node.description}
-      </p>
-    </div>
-  );
-}
-
-// ── Main component ─────────────────────────────────────────────────────────────
-
-type ViewMode = 'flow' | 'topology';
 
 export function NetworkFlowPage() {
-  const [viewMode, setViewMode] = useState<ViewMode>('flow');
-  const [selectedNode, setSelectedNode] = useState<NodeDetail | null>(null);
-  const [liveData, setLiveData] = useState(false);
+  const [view, setView] = useState<'3d' | 'topology' | 'depth'>('3d');
+  const [rotation, setRotation] = useState(0);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [topoData, setTopoData] = useState<TopoData>(generateTopoData());
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [stats, setStats] = useState<TrafficStat[]>([]);
-  const [totalPackets, setTotalPackets] = useState(0);
-  const [blockedCount, setBlockedCount] = useState(0);
 
-  // Topology state
-  const [topoData] = useState<TopoData>(generateTopoData);
-  const { nodes: topoNodes, edges: topoEdges } = useMemo(() => buildTopoElements(topoData), [topoData]);
+  // ReactFlow state for interactivity
+  const [rfNodes, setRfNodes] = useState<Node[]>([]);
+  const [rfEdges, setRfEdges] = useState<Edge[]>([]);
 
-  // Canvas refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef    = useRef<number>(0);
   const packetsRef = useRef<Packet[]>([]);
-  const rotYRef    = useRef(0.35);
-  const isDragging = useRef(false);
-  const lastMouseX = useRef(0);
-  const nextId     = useRef(0);
-  // Projected positions for click detection
-  const projectedRef = useRef(new Map<string, { sx: number; sy: number; scale: number }>());
-  // Ref mirror of selectedNode.id so the render loop reads it without restarting
   const selectedNodeIdRef = useRef<string | null>(null);
+  const projectedRef = useRef<Map<string, { sx: number; sy: number; scale: number }>>(new Map());
 
-  const fetchLiveData = useCallback(async () => {
+  const nodeMap = useMemo(() => new Map(FLOW_NODES.map(n => [n.id, n])), []);
+  
+  const selectedNode = useMemo(() => {
+    if (!selectedNodeId) return null;
+    
+    // Check FLOW_NODES first (for 3D view)
+    const flowNode = FLOW_NODES.find(n => n.id === selectedNodeId);
+    if (flowNode) return flowNode;
+    
+    // Then check topoData (for Topology view)
+    const topoNode = topoData.nodes.find(n => n.id === selectedNodeId);
+    if (topoNode) {
+      return {
+        id: topoNode.id,
+        label: topoNode.label,
+        ip: topoNode.ip,
+        type: topoNode.type,
+        color: NODE_STYLE[topoNode.type]?.border || '#334155',
+        glowColor: NODE_STYLE[topoNode.type]?.glow || 'rgba(51,65,85,0.3)',
+        description: `Network node of type ${topoNode.type}. Currently ${topoNode.status} with ${topoNode.connections} active connections.`,
+        status: topoNode.status,
+        connections: topoNode.connections,
+        traffic: topoNode.traffic || 0,
+        role: topoNode.type.charAt(0).toUpperCase() + topoNode.type.slice(1),
+      } as NodeDetail;
+    }
+    return null;
+  }, [selectedNodeId, topoData]);
+
+  const refreshTopo = useCallback(() => {
     setIsRefreshing(true);
-    try {
-      const res = await fetch(`${BACKEND_URL}/api/logs/recent`, { signal: AbortSignal.timeout(2000) });
-      setLiveData(res.ok);
-    } catch { setLiveData(false); }
-    setIsRefreshing(false);
+    setTimeout(() => {
+      const newData = generateTopoData();
+      setTopoData(newData);
+      setIsRefreshing(false);
+    }, 800);
   }, []);
 
-  useEffect(() => { fetchLiveData(); }, [fetchLiveData]);
+  // Initialize ReactFlow nodes and edges when topoData changes
+  useEffect(() => {
+    setRfNodes(topoData.nodes.map((n, i) => ({
+      id: n.id,
+      type: 'custom',
+      data: n,
+      position: { x: 100 + (i % 4) * 250, y: 100 + Math.floor(i / 4) * 180 },
+    })));
+    setRfEdges(topoData.edges.map((e, i) => ({
+      id: `e${i}`,
+      source: e.source,
+      target: e.target,
+      label: e.label,
+      animated: e.status !== 'normal',
+      style: { stroke: EDGE_COLORS[e.status], strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: EDGE_COLORS[e.status] },
+    })));
+  }, [topoData]);
 
-  // Keep the ref in sync so the canvas render loop can read it without restarting
-  useEffect(() => { selectedNodeIdRef.current = selectedNode?.id ?? null; }, [selectedNode]);
-
-  const spawnPacket = useCallback(() => {
-    const edge = FLOW_EDGES[Math.floor(Math.random() * FLOW_EDGES.length)];
-    if (!edge) return;
-    const type = weightedRandom();
-    const [from, to] = Math.random() > 0.3 ? [edge.from, edge.to] : [edge.to, edge.from];
-    packetsRef.current.push({ id: nextId.current++, fromId: from, toId: to, progress: 0, speed: 0.004 + Math.random() * 0.006, color: type.color, label: type.label, size: type.label === 'BLOCKED' ? 5 : 3.5 });
-    if (packetsRef.current.length > 80) packetsRef.current.shift();
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => setRfNodes((nds) => applyNodeChanges(changes, nds)),
+    []
+  );
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => setRfEdges((eds) => applyEdgeChanges(changes, eds)),
+    []
+  );
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id);
   }, []);
 
   useEffect(() => {
+    selectedNodeIdRef.current = selectedNodeId;
+  }, [selectedNodeId]);
+
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || viewMode !== 'flow') return;
-    const nodeMap = new Map(FLOW_NODES.map(n => [n.id, n]));
-    const typeCounts: Record<string, number> = {};
+    if (!canvas || view !== '3d') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let frameId: number;
+    let lastTime = performance.now();
     let total = 0, blocked = 0;
-    const spawnInterval = setInterval(() => { if (Math.random() < 0.7) spawnPacket(); }, 120);
+    const typeCounts: Record<string, number> = {};
 
-    const render = () => {
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      const W = canvas.width, H = canvas.height;
-      const cx = W / 2, cy = H / 2, fov = 520, rot = rotYRef.current;
+    const render = (time: number) => {
+      const dt = time - lastTime;
+      lastTime = time;
+      setRotation(r => (r + dt * 0.00015) % (Math.PI * 2));
+      const rot = rotation;
 
-      ctx.clearRect(0, 0, W, H);
+      const w = canvas.width, h = canvas.height;
+      const cx = w / 2, cy = h / 2, fov = 400;
 
-      // Dark canvas background
-      ctx.fillStyle = '#070c18';
-      ctx.fillRect(0, 0, W, H);
+      ctx.clearRect(0, 0, w, h);
 
-      // Subtle grid
-      ctx.strokeStyle = 'rgba(0,217,255,0.04)';
-      ctx.lineWidth = 1;
-      const gs = 50;
-      for (let gx = cx % gs; gx < W; gx += gs) { ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke(); }
-      for (let gy = cy % gs; gy < H; gy += gs) { ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke(); }
+      // Spawn packets
+      if (Math.random() < 0.18) {
+        const edge = FLOW_EDGES[Math.floor(Math.random() * FLOW_EDGES.length)]!;
+        const type = weightedRandom();
+        packetsRef.current.push({
+          id: Math.random(),
+          fromId: edge.from, toId: edge.to,
+          progress: 0, speed: 0.004 + Math.random() * 0.008,
+          color: type.color, label: type.label, size: 2 + Math.random() * 2,
+        });
+      }
 
-      // Project all nodes
+      // Project nodes
       const projected = new Map<string, { sx: number; sy: number; scale: number }>();
-      for (const n of FLOW_NODES) {
-        projected.set(n.id, project(n.x, n.y, n.z, rot, cx, cy, fov));
+      for (const node of FLOW_NODES) {
+        projected.set(node.id, project(node.x, node.y, node.z, rot, cx, cy, fov));
       }
       projectedRef.current = projected;
 
@@ -434,7 +382,7 @@ export function NetworkFlowPage() {
         ctx.beginPath(); ctx.arc(sx, sy, r * 0.32, 0, Math.PI * 2);
         ctx.fillStyle = node.color; ctx.fill();
 
-        // Label pill — always visible
+        // Label pill
         const labelText = node.label;
         const ipText = node.ip;
         const fontSize = Math.max(10, Math.round(11 * scale));
@@ -449,7 +397,6 @@ export function NetworkFlowPage() {
         const iw = ctx.measureText(ipText).width;
         const pillW = Math.max(lw, iw) + pillPadX * 2;
 
-        // Pill background
         const px = sx - pillW / 2;
         ctx.fillStyle = 'rgba(7,12,24,0.88)';
         ctx.beginPath();
@@ -459,13 +406,11 @@ export function NetworkFlowPage() {
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Label text
         ctx.font = `600 ${fontSize}px Inter, system-ui, sans-serif`;
         ctx.fillStyle = '#e4e7eb';
         ctx.textAlign = 'center';
         ctx.fillText(labelText, sx, pillY + fontSize + 2 * scale);
 
-        // IP text
         ctx.font = `${ipSize}px "SF Mono", monospace`;
         ctx.fillStyle = node.color + 'cc';
         ctx.fillText(ipText, sx, pillY + fontSize + ipSize + 5 * scale);
@@ -479,7 +424,6 @@ export function NetworkFlowPage() {
           total++; if (p.label === 'BLOCKED') blocked++;
           return false;
         }
-        const fn = nodeMap.get(p.fromId)!, tn = nodeMap.get(p.toId)!;
         const pf = projected.get(p.fromId)!, pt = projected.get(p.toId)!;
         const px = pf.sx + (pt.sx - pf.sx) * p.progress;
         const py = pf.sy + (pt.sy - pf.sy) * p.progress;
@@ -507,201 +451,155 @@ export function NetworkFlowPage() {
         // Packet dot
         ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2);
         ctx.fillStyle = p.color; ctx.fill();
-
-        // Suppress unused var warning
-        void fn; void tn;
         return true;
       });
 
-      rotYRef.current += 0.0006;
-      animRef.current = requestAnimationFrame(render);
+      frameId = requestAnimationFrame(render);
     };
 
-    render();
-    const statsInterval = setInterval(() => {
-      const entries = Object.entries(typeCounts).map(([label, count]) => ({
-        label, count, color: PACKET_TYPES.find(t => t.label === label)?.color || '#fff',
-      })).sort((a, b) => b.count - a.count);
-      setStats(entries);
-      setTotalPackets(total);
-      setBlockedCount(blocked);
-    }, 1500);
+    frameId = requestAnimationFrame(render);
+    return () => cancelAnimationFrame(frameId);
+  }, [view, rotation]);
 
-    return () => { cancelAnimationFrame(animRef.current); clearInterval(spawnInterval); clearInterval(statsInterval); };
-  }, [spawnPacket, viewMode]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || viewMode !== 'flow') return;
-    const ro = new ResizeObserver(() => { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; });
-    ro.observe(canvas);
-    canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
-    return () => ro.disconnect();
-  }, [viewMode]);
-
-  // Click detection on canvas
-  const onCanvasClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (isDragging.current) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    if (view !== '3d') return;
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    for (const node of FLOW_NODES) {
-      const p = projectedRef.current.get(node.id);
-      if (!p) continue;
-      const r = node.radius * p.scale + 10;
-      if (Math.hypot(mx - p.sx, my - p.sy) <= r) {
-        setSelectedNode(node);
-        return;
-      }
-    }
-    setSelectedNode(null);
-  }, []);
 
-  const onMouseDown = (e: React.MouseEvent) => { isDragging.current = false; lastMouseX.current = e.clientX; };
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (e.buttons !== 1) return;
-    const delta = Math.abs(e.clientX - lastMouseX.current);
-    if (delta > 3) isDragging.current = true;
-    rotYRef.current += (e.clientX - lastMouseX.current) * 0.005;
-    lastMouseX.current = e.clientX;
-  };
-  const onMouseUp = () => { setTimeout(() => { isDragging.current = false; }, 50); };
-
-  // Topology node click
-  const onTopoNodeClick = useCallback((_: unknown, node: Node) => {
-    const d = node.data as TopoNode;
-    setSelectedNode({
-      id: d.id, label: d.label, ip: d.ip, type: d.type,
-      color: NODE_STYLE[d.type]?.border ?? '#6b7280',
-      glowColor: NODE_STYLE[d.type]?.glow ?? '',
-      description: `${d.type.charAt(0).toUpperCase() + d.type.slice(1)} node in the network`,
-      status: d.status, connections: d.connections, traffic: d.traffic ?? 0,
-      role: d.type.charAt(0).toUpperCase() + d.type.slice(1),
+    let closestId: string | null = null, minDist = 40;
+    projectedRef.current.forEach((p, id) => {
+      const d = Math.hypot(p.sx - mx, p.sy - my);
+      if (d < minDist) { minDist = d; closestId = id; }
     });
-  }, []);
+    setSelectedNodeId(closestId);
+  };
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-9.5rem)]">
-      {/* Header row */}
-      <div className="flex items-center justify-between shrink-0">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Network</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {viewMode === 'flow'
-              ? 'Live 3D packet traffic visualization — click a node for details'
-              : 'Interactive infrastructure dependency map — click a node for details'}
-          </p>
+    <div className="h-screen flex flex-col overflow-hidden bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0"
+        style={{ background: 'rgba(7,12,24,0.4)', backdropFilter: 'blur(8px)' }}>
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <Network className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-foreground">Network Flow</h1>
+            <p className="text-xs text-muted-foreground">Real-time packet visualization & topology</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* View tabs */}
-          <div className="flex rounded-lg border border-border overflow-hidden" style={{ background: 'var(--glass-bg)' }}>
-            {([['flow', 'Packet Flow', Waypoints], ['topology', 'Topology', Network]] as const).map(([id, label, Icon]) => (
-              <button key={id} onClick={() => setViewMode(id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors ${viewMode === id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}>
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {label}
-              </button>
-            ))}
+          <div className="flex bg-muted/50 p-1 rounded-lg border border-border mr-2">
+            <button onClick={() => setView('3d')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${view === '3d' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              <Globe className="h-3.5 w-3.5" /> 3D Flow
+            </button>
+            <button onClick={() => setView('depth')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${view === 'depth' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              <Layers className="h-3.5 w-3.5" /> 3D Depth
+            </button>
+            <button onClick={() => setView('topology')}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-2 ${view === 'topology' ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+              <Waypoints className="h-3.5 w-3.5" /> Topology
+            </button>
           </div>
-          {viewMode === 'flow' && (
-            <div className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium ${liveData ? 'border-success/30 bg-success/5 text-success' : 'border-warning/30 bg-warning/5 text-warning'}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${liveData ? 'bg-success animate-pulse' : 'bg-warning'}`} />
-              {liveData ? 'Live Data' : 'Simulated'}
-            </div>
-          )}
-          <button onClick={fetchLiveData} disabled={isRefreshing}
-            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-muted transition-colors disabled:opacity-50"
-            aria-label="Refresh">
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
-            {viewMode === 'topology' ? 'Refresh' : 'Reconnect'}
+          <button onClick={refreshTopo} disabled={isRefreshing}
+            className="p-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50">
+            <RefreshCw className={`h-4 w-4 text-muted-foreground ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
-      {/* Main layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_272px] gap-4 flex-1 min-h-0">
-        {/* Canvas / ReactFlow */}
-        <div className="rounded-xl border border-border overflow-hidden min-h-0"
-          style={{ background: viewMode === 'flow' ? '#070c18' : '#060a14' }}>
-          {viewMode === 'flow' ? (
-            <canvas ref={canvasRef} className="w-full h-full cursor-crosshair"
-              onClick={onCanvasClick} onMouseDown={onMouseDown}
-              onMouseMove={onMouseMove} onMouseUp={onMouseUp} onMouseLeave={onMouseUp}
-              aria-label="3D network packet flow — click node for details, drag to rotate" />
+      {/* Main Content */}
+      <div className="flex-1 flex min-h-0 relative">
+        {/* Canvas / Flow Area */}
+        <div className="flex-1 relative bg-[#070c18]">
+          {view === '3d' ? (
+            <canvas ref={canvasRef} width={1200} height={800} onClick={handleCanvasClick}
+              className="w-full h-full cursor-crosshair" />
+          ) : view === 'depth' ? (
+            <div className="w-full h-full p-8 overflow-auto custom-scrollbar">
+              <NetworkTopologyDepth />
+            </div>
           ) : (
-            <>
-              <style>{`
-                .react-flow__minimap { background: #0c1629 !important; border: 1px solid #1e293b !important; border-radius: 8px !important; }
-                .react-flow__controls { background: #0c1629 !important; border: 1px solid #1e293b !important; border-radius: 8px !important; }
-                .react-flow__controls-button { background: #0c1629 !important; border-bottom: 1px solid #1e293b !important; fill: #94a3b8 !important; }
-                .react-flow__controls-button:hover { background: #1e293b !important; }
-                .react-flow__attribution { display: none !important; }
-              `}</style>
-              <ReactFlow nodes={topoNodes} edges={topoEdges} nodeTypes={topoNodeTypes}
-                fitView minZoom={0.3} maxZoom={2}
-                onNodeClick={onTopoNodeClick} proOptions={{ hideAttribution: true }}>
-                <Background color="#1e293b" gap={25} size={1} />
-                <Controls position="bottom-left" />
-                <MiniMap nodeColor={n => NODE_STYLE[(n.data as TopoNode).type]?.border ?? '#6b7280'} maskColor="rgba(6,10,20,0.85)" />
+            <div className="w-full h-full">
+              <ReactFlow
+                nodes={rfNodes}
+                edges={rfEdges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onNodeClick={onNodeClick}
+                nodeTypes={topoNodeTypes}
+                fitView
+              >
+                <Background color="#1e293b" gap={20} />
+                <Controls />
+                <MiniMap nodeColor={n => NODE_STYLE[(n.data as TopoNode).type]?.border || '#334155'}
+                  maskColor="rgba(15, 23, 42, 0.7)" style={{ background: '#0f172a' }} />
               </ReactFlow>
-            </>
+            </div>
+          )}
+
+          {/* Floating overlay for 3D and Topology view */}
+          {selectedNode && (
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+              className="absolute top-6 right-6 w-80 rounded-2xl border border-border p-5 shadow-2xl"
+              style={{ background: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(16px)', zIndex: 100 }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg" style={{ background: selectedNode.color + '20' }}>
+                    <Shield className="h-5 w-5" style={{ color: selectedNode.color }} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-foreground">{selectedNode.label}</h3>
+                    <p className="text-xs font-mono text-muted-foreground">{selectedNode.ip}</p>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedNodeId(null)} className="text-muted-foreground hover:text-foreground">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground leading-relaxed">{selectedNode.description}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Status</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-1.5 w-1.5 rounded-full" style={{ background: STATUS_COLORS[selectedNode.status] }} />
+                      <span className="text-xs font-semibold capitalize" style={{ color: STATUS_COLORS[selectedNode.status] }}>
+                        {selectedNode.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-muted/30 border border-border/50">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Role</p>
+                    <p className="text-xs font-semibold text-foreground">{selectedNode.role}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
           )}
         </div>
 
-        {/* Right panel */}
-        <div className="flex flex-col gap-3 overflow-y-auto min-h-0">
-          {/* Selected node detail */}
-          {selectedNode && (
-            <NodeDetailPanel node={selectedNode} onClose={() => setSelectedNode(null)} />
-          )}
-
-          {viewMode === 'flow' ? (
+        {/* Sidebar Controls */}
+        <div className="w-72 border-l border-border flex flex-col gap-4 p-4 overflow-y-auto custom-scrollbar shrink-0"
+          style={{ background: 'rgba(7,12,24,0.2)' }}>
+          {view === '3d' ? (
             <>
-              {/* Traffic stats */}
+              {/* Node list */}
               <div className="rounded-xl border border-border p-4 shrink-0"
                 style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(12px)' }}>
-                <div className="flex items-center gap-2 mb-3">
-                  <Activity className="h-4 w-4 text-primary" aria-hidden="true" />
-                  <span className="text-sm font-semibold text-foreground">Live Traffic</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <div className="rounded-lg bg-muted/40 p-2.5 text-center">
-                    <p className="text-xl font-bold text-foreground tabular-nums">{totalPackets.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Total</p>
-                  </div>
-                  <div className="rounded-lg bg-destructive/10 p-2.5 text-center">
-                    <p className="text-xl font-bold text-destructive tabular-nums">{blockedCount.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">Blocked</p>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  {stats.slice(0, 6).map(s => (
-                    <div key={s.label} className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full shrink-0" style={{ background: s.color }} />
-                      <span className="text-xs text-muted-foreground flex-1">{s.label}</span>
-                      <span className="text-xs font-mono font-semibold text-foreground tabular-nums">{s.count.toLocaleString()}</span>
-                    </div>
-                  ))}
-                  {stats.length === 0 && <p className="text-xs text-muted-foreground text-center py-1">Collecting…</p>}
-                </div>
-              </div>
-
-              {/* Node list */}
-              <div className="rounded-xl border border-border p-4"
-                style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(12px)' }}>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                  Nodes — click to inspect
+                  Network Nodes
                 </p>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   {FLOW_NODES.map(node => {
-                    const Icon = TYPE_ICON[node.type] ?? Monitor;
-                    const isSelected = selectedNode?.id === node.id;
+                    const Icon = node.type === 'firewall' ? Shield : node.type === 'server' ? Server : Monitor;
                     return (
-                      <button key={node.id} onClick={() => setSelectedNode(isSelected ? null : node)}
-                        className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-2 transition-colors ${isSelected ? 'bg-primary/10' : 'hover:bg-muted/60'}`}
-                        style={{ border: isSelected ? `1px solid ${node.color}55` : '1px solid transparent' }}>
-                        <div className="flex h-6 w-6 items-center justify-center rounded shrink-0"
+                      <button key={node.id} onClick={() => setSelectedNodeId(node.id)}
+                        className={`w-full flex items-center gap-2.5 p-2 rounded-lg transition-all ${selectedNodeId === node.id ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50 border border-transparent'}`}>
+                        <div className="p-1.5 rounded shrink-0"
                           style={{ background: node.color + '20', border: `1px solid ${node.color}44` }}>
                           <Icon className="h-3 w-3" style={{ color: node.color }} aria-hidden="true" />
                         </div>
@@ -716,7 +614,6 @@ export function NetworkFlowPage() {
                   })}
                 </div>
               </div>
-
               {/* Packet types */}
               <div className="rounded-xl border border-border p-4 shrink-0"
                 style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(12px)' }}>
@@ -754,7 +651,6 @@ export function NetworkFlowPage() {
                   </div>
                 ))}
               </div>
-
               {/* Legend */}
               <div className="rounded-xl border border-border p-4"
                 style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(12px)' }}>
@@ -770,7 +666,6 @@ export function NetworkFlowPage() {
                   ))}
                 </div>
               </div>
-
               {/* Edge legend */}
               <div className="rounded-xl border border-border p-4"
                 style={{ background: 'var(--glass-bg)', backdropFilter: 'blur(12px)' }}>

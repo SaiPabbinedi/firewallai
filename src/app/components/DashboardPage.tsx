@@ -8,6 +8,8 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts';
+import { KillChainTimeline } from './ui/KillChainTimeline';
+import { PredictiveAnomalies } from './ui/PredictiveAnomalies';
 
 interface BlockedDomain {
   domain: string;
@@ -98,254 +100,147 @@ export function DashboardPage() {
     { time: '12:00', packets: 9200 },
     { time: '16:00', packets: 8500 },
     { time: '20:00', packets: 6300 },
-    { time: '23:59', packets: 5100 },
   ]);
 
-  const [aiInsights] = useState([
-    { severity: 'high',   title: 'Possible brute-force attack detected',    description: 'Multiple failed SSH attempts from 192.168.1.45',              time: '2 minutes ago'  },
-    { severity: 'medium', title: 'Rule consolidation suggested',             description: '8 redundant firewall rules identified for optimization',       time: '15 minutes ago' },
-    { severity: 'low',    title: 'Policy drift detected in DMZ zone',        description: 'Configuration variance from baseline detected',                time: '1 hour ago'     },
-  ]);
+  useEffect(() => {
+    fetchBlocklist();
+    const interval = setInterval(() => {
+      setActiveThreats(prev => Math.max(0, prev + (Math.random() > 0.5 ? 1 : -1)));
+      setLogsPerSecond(prev => prev + Math.floor(Math.random() * 100 - 50));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchBlocklist = async () => {
     setIsLoadingBlocklist(true);
     try {
-      const response = await fetch(`${backendUrl}/ai.txt`);
-      if (response.ok) {
-        const text = await response.text();
-        const domains = text.split('\n').filter(d => d.trim() !== '');
-        const now = new Date();
-        const reasons = ['Policy Violation', 'Malware', 'Phishing', 'Adult Content', 'Social Media'];
-        const blockedList: BlockedDomain[] = domains.map((domain, index) => ({
-          domain: domain.trim(),
-          blockedAt: new Date(now.getTime() - Math.random() * 86400000 * 7).toLocaleString(),
-          reason: reasons[index % 5]!,
-          attempts: Math.floor(Math.random() * 500) + 10,
-        }));
-        setBlockedDomains(blockedList);
+      const res = await fetch(`${backendUrl}/api/blocklist`);
+      if (res.ok) {
+        const data = await res.json();
+        setBlockedDomains(data.slice(0, 10));
+      } else {
+        setBlockedDomains([
+          { domain: 'malicious-site.com', blockedAt: '10:45 AM', reason: 'Phishing', attempts: 42 },
+          { domain: 'tracker-network.net', blockedAt: '09:12 AM', reason: 'Spyware', attempts: 128 },
+          { domain: 'botnet-cnc.org', blockedAt: 'Yesterday', reason: 'C&C Server', attempts: 5 },
+        ]);
       }
-    } catch {
+    } catch (err) {
       setBlockedDomains([
-        { domain: 'example.com',   blockedAt: '2025-01-25 09:30:00', reason: 'Policy Violation', attempts: 156 },
-        { domain: 'facebook.com',  blockedAt: '2025-01-25 08:15:00', reason: 'Social Media',      attempts: 342 },
-        { domain: 'instagram.com', blockedAt: '2025-01-24 14:22:00', reason: 'Social Media',      attempts: 289 },
-        { domain: 'bing.com',      blockedAt: '2025-01-23 11:45:00', reason: 'Policy Violation',  attempts: 45  },
+        { domain: 'malicious-site.com', blockedAt: '10:45 AM', reason: 'Phishing', attempts: 42 },
+        { domain: 'tracker-network.net', blockedAt: '09:12 AM', reason: 'Spyware', attempts: 128 },
+        { domain: 'botnet-cnc.org', blockedAt: 'Yesterday', reason: 'C&C Server', attempts: 5 },
       ]);
+    } finally {
+      setIsLoadingBlocklist(false);
     }
-    setIsLoadingBlocklist(false);
   };
-
-  const generateBlockEvent = (): BlockEvent => {
-    const domains = blockedDomains.length > 0
-      ? blockedDomains.map(d => d.domain)
-      : ['facebook.com', 'instagram.com', 'example.com', 'bing.com'];
-    const sourceIPs = ['192.168.1.45', '192.168.1.102', '192.168.1.78', '10.0.0.15', '172.16.0.23'];
-    return {
-      domain:   domains[Math.floor(Math.random() * domains.length)]!,
-      timestamp: new Date().toLocaleTimeString(),
-      sourceIP: sourceIPs[Math.floor(Math.random() * sourceIPs.length)]!,
-      action:   'BLOCKED',
-    };
-  };
-
-  useEffect(() => { fetchBlocklist(); }, [backendUrl]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLogsPerSecond(prev => {
-        const change = Math.floor(Math.random() * 200) - 100;
-        return Math.max(2000, Math.min(4000, prev + change));
-      });
-      if (Math.random() > 0.7) {
-        setActiveThreats(prev => Math.max(0, prev + (Math.random() > 0.5 ? 1 : -1)));
-      }
-      setNetworkTrafficData(prev => {
-        const newData = [...prev];
-        newData.shift();
-        const lastValue = newData[newData.length - 1]?.packets ?? 5000;
-        const change = Math.floor(Math.random() * 2000) - 1000;
-        newData.push({
-          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-          packets: Math.max(1000, Math.min(12000, lastValue + change)),
-        });
-        return newData;
-      });
-      if (Math.random() > 0.6 && blockedDomains.length > 0) {
-        setBlockEvents(prev => [generateBlockEvent(), ...prev.slice(0, 9)]);
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [blockedDomains]);
-
-  const statCards = [
-    {
-      title: 'Active Threats',
-      value: activeThreats.toString(),
-      sub: '+3 from last hour',
-      icon: AlertTriangle,
-      accent: '#ff3b57',
-      accentBg: 'rgba(255,59,87,0.1)',
-      accentBorder: 'rgba(255,59,87,0.25)',
-    },
-    {
-      title: 'Logs / Second',
-      value: logsPerSecond.toLocaleString(),
-      sub: 'Real-time metric',
-      icon: Activity,
-      accent: 'var(--primary)',
-      accentBg: 'rgba(0,217,255,0.08)',
-      accentBorder: 'rgba(0,217,255,0.25)',
-    },
-    {
-      title: 'Firewall Rules',
-      value: ruleCount.toString(),
-      sub: '12 optimized this week',
-      icon: Shield,
-      accent: '#10b981',
-      accentBg: 'rgba(16,185,129,0.08)',
-      accentBorder: 'rgba(16,185,129,0.25)',
-    },
-    {
-      title: 'Risk Level',
-      value: riskLevel,
-      sub: 'Elevated from Low',
-      icon: TrendingUp,
-      accent: '#fbbf24',
-      accentBg: 'rgba(251,191,36,0.08)',
-      accentBorder: 'rgba(251,191,36,0.25)',
-    },
-  ];
 
   return (
-    <div className="space-y-4">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
+    <div className="p-8 max-w-[1600px] mx-auto space-y-8">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Security Dashboard</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Real-time pfSense firewall monitoring and threat intelligence
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Security Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Real-time network protection & AI insights</p>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <div className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </div>
-            <span className="text-emerald-500 font-medium">Live</span>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-sm font-medium text-primary">System Live</span>
           </div>
-          <span>·</span>
-          <span className="font-mono">{backendUrl}</span>
         </div>
       </div>
 
-      {/* ── Bento Grid ─────────────────────────────────────────── */}
       <motion.div
         variants={container}
         initial="hidden"
         animate="visible"
-        className="grid gap-4"
-        style={{
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gridTemplateRows: 'auto auto auto',
-        }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        {/* Row 1: 4 stat cards */}
-        {statCards.map((sc, i) => {
-          const Icon = sc.icon;
-          return (
-            <GlassCard
-              key={i}
-              style={{ gridColumn: i + 1, gridRow: 1 }}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground truncate">{sc.title}</p>
-                  <p className="mt-1.5 text-2xl font-bold text-foreground leading-none">{sc.value}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{sc.sub}</p>
-                </div>
-                <div
-                  className="rounded-lg p-2 ml-3 shrink-0"
-                  style={{ background: sc.accentBg, border: `1px solid ${sc.accentBorder}` }}
-                >
-                  <Icon className="h-4 w-4" style={{ color: sc.accent }} />
-                </div>
-              </div>
-            </GlassCard>
-          );
-        })}
-
-        {/* Row 2–3, Col 4: AI Insights (tall card) */}
-        <GlassCard
-          style={{ gridColumn: 4, gridRow: '2 / 4' }}
-          className="flex flex-col"
-        >
-          <div className="mb-4">
-            <h3 className="text-sm font-semibold text-foreground">AI Insights</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">ML-powered threat detection</p>
+        {/* Row 1: Stats Cards */}
+        <GlassCard className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
+            <Shield className="h-6 w-6 text-primary" />
           </div>
-          <div className="space-y-2.5 flex-1">
-            {aiInsights.map((insight, i) => {
-              const cfg = severityConfig[insight.severity as keyof typeof severityConfig];
-              return (
-                <div
-                  key={i}
-                  className="rounded-lg p-3 transition-all"
-                  style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    <span
-                      className="mt-1 h-2 w-2 rounded-full shrink-0"
-                      style={{ background: cfg.dot, boxShadow: `0 0 6px ${cfg.dot}` }}
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-xs font-semibold text-foreground leading-snug">{insight.title}</p>
-                        <span
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                          style={{ background: cfg.bg, color: cfg.dot, border: `1px solid ${cfg.border}` }}
-                        >
-                          {cfg.label}
-                        </span>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground leading-snug">{insight.description}</p>
-                      <p className="mt-1.5 text-[10px] text-muted-foreground/60">{insight.time}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Threats</p>
+            <h2 className="text-2xl font-bold text-foreground">{activeThreats}</h2>
           </div>
         </GlassCard>
 
-        {/* Row 2, Col 1–3: Traffic Chart */}
-        <GlassCard style={{ gridColumn: '1 / 4', gridRow: 2 }}>
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">Network Traffic</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Packets processed per interval (live)</p>
-            </div>
-            <span className="flex items-center gap-1.5 text-xs text-success">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-              </span>
-              Live
-            </span>
+        <GlassCard className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+            <Activity className="h-6 w-6 text-cyan-400" />
           </div>
-          <div className="h-52">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Logs / Second</p>
+            <h2 className="text-2xl font-bold text-foreground">{logsPerSecond.toLocaleString()}</h2>
+          </div>
+        </GlassCard>
+
+        <GlassCard className="flex items-center gap-4">
+          <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+            <AlertTriangle className="h-6 w-6 text-orange-400" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Risk Level</p>
+            <h2 className="text-2xl font-bold text-orange-400">{riskLevel}</h2>
+          </div>
+        </GlassCard>
+
+        {/* Row 2: Kill Chain Visualization (Full Width) */}
+        <GlassCard style={{ gridColumn: '1 / -1' }}>
+          <div className="flex items-center gap-2.5 mb-6">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/25">
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Advanced Security Visualization</h3>
+              <p className="text-xs text-muted-foreground">Real-time Threat "Kill Chain" progression</p>
+            </div>
+          </div>
+          <KillChainTimeline />
+        </GlassCard>
+
+        {/* Row 3: Network Traffic & Predictive Anomalies */}
+        <GlassCard style={{ gridColumn: '1 / 3' }}>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg bg-primary/10 border border-primary/25">
+                <Activity className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">Network Traffic</h3>
+                <p className="text-xs text-muted-foreground">Packet flow over last 24h</p>
+              </div>
+            </div>
+          </div>
+          <div className="h-[240px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={networkTrafficData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" />
-                <XAxis dataKey="time" stroke="var(--muted-foreground)" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} />
-                <YAxis stroke="var(--muted-foreground)" tick={{ fill: 'var(--muted-foreground)', fontSize: 11 }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
+                <XAxis
+                  dataKey="time"
+                  stroke="var(--muted-foreground)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  stroke="var(--muted-foreground)"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(val) => `${val / 1000}k`}
+                />
                 <Tooltip
                   contentStyle={{
                     background: 'var(--glass-bg)',
-                    backdropFilter: 'blur(12px)',
+                    backdropFilter: 'blur(8px)',
                     border: '1px solid var(--glass-border)',
                     borderRadius: '8px',
-                    color: 'var(--foreground)',
+                    fontSize: '12px',
                   }}
                 />
                 <Line
@@ -361,8 +256,12 @@ export function DashboardPage() {
           </div>
         </GlassCard>
 
-        {/* Row 3, Col 1–2: Blocked Domains */}
-        <GlassCard style={{ gridColumn: '1 / 3', gridRow: 3 }}>
+        <GlassCard style={{ gridColumn: 3 }}>
+          <PredictiveAnomalies />
+        </GlassCard>
+
+        {/* Row 4: Blocked Domains & Events */}
+        <GlassCard style={{ gridColumn: '1 / 3' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <div
@@ -384,7 +283,6 @@ export function DashboardPage() {
               <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${isLoadingBlocklist ? 'animate-spin' : ''}`} />
             </button>
           </div>
-
           {isLoadingBlocklist ? (
             <div className="flex items-center justify-center py-8">
               <RefreshCw className="h-5 w-5 animate-spin text-primary" />
@@ -414,8 +312,7 @@ export function DashboardPage() {
           )}
         </GlassCard>
 
-        {/* Row 3, Col 3: Recent Block Events */}
-        <GlassCard style={{ gridColumn: 3, gridRow: 3 }}>
+        <GlassCard style={{ gridColumn: 3 }}>
           <div className="flex items-center gap-2.5 mb-4">
             <div
               className="p-2 rounded-lg"
@@ -428,7 +325,6 @@ export function DashboardPage() {
               <p className="text-xs text-muted-foreground">Live access attempts</p>
             </div>
           </div>
-
           <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
             {blockEvents.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-6 text-muted-foreground">
