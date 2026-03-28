@@ -106,6 +106,7 @@ docker/grafana/provisioning/datasources/secrets/
 *.bak
 *.orig
 .superpowers/*
+.claude/*
 
 ENHANCEMENT_GUIDE.md
 IMPLEMENTATION_SUMMARY.md
